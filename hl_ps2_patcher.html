@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HL PS2 ELF Patcher — SLUS_200.66</title>
+<title>HL PS2 ELF Patcher — SLUS_200_66</title>
 <style>
   :root {
     --bg:       #0d0d0d;
@@ -307,7 +307,8 @@
     <div class="sidebar-section">Arquivo</div>
     <div class="sidebar-item active" data-cat="all">Todos os patches <span class="badge-count" id="cnt-all">0</span></div>
     <div class="sidebar-section">Categorias</div>
-    <div class="sidebar-item" data-cat="hud">HUD <span class="badge-count" id="cnt-hud">0</span></div>
+    <div class="sidebar-item" data-cat="hud">HUD — Cor <span class="badge-count" id="cnt-hud">0</span></div>
+    <div class="sidebar-item" data-cat="hudpos">HUD — Posição <span class="badge-count" id="cnt-hudpos">0</span></div>
     <div class="sidebar-item" data-cat="armas">Armas — Ammo <span class="badge-count" id="cnt-armas">0</span></div>
     <div class="sidebar-item" data-cat="firerate">Fire Rate <span class="badge-count" id="cnt-firerate">0</span></div>
     <div class="sidebar-item" data-cat="reload">Reload Time <span class="badge-count" id="cnt-reload">0</span></div>
@@ -372,6 +373,67 @@ const PATCHES = [
     desc:'Offset horizontal da lanterna. Valor signed 16-bit. Padrão: -8.',
     offset:0x00019220, orig:[0xF8,0xFF,0xF2,0x24],
     edit:[{label:'X offset (px signed)',key:'v',byte16:true,min:-640,max:640,def:-8}] },
+
+  // ── HUD — POSIÇÃO ──
+  // DeathNotice (kill feed)
+  { id:'dn_x',     cat:'hudpos', name:'DeathNotice — X',
+    desc:'Posição horizontal do kill feed (X em pixels). Padrão: 420 (lado direito).',
+    offset:0x000184B8, orig:[0xA4,0x00,0x07,0x24],
+    edit:[{label:'X (px)',key:'v',byte16:true,min:0,max:639,def:420}] },
+  { id:'dn_y',     cat:'hudpos', name:'DeathNotice — Y',
+    desc:'Posição vertical do kill feed (Y em pixels, a partir do topo). Padrão: 84.',
+    offset:0x0001858C, orig:[0x54,0x00,0x07,0x24],
+    edit:[{label:'Y (px)',key:'v',byte:0,min:0,max:447,def:84}] },
+  { id:'dn_lh',    cat:'hudpos', name:'DeathNotice — altura de linha',
+    desc:'Espaçamento vertical entre entradas do kill feed. Padrão: 24.',
+    offset:0x000189C4, orig:[0x18,0x00,0x06,0x24],
+    edit:[{label:'Altura (px)',key:'v',byte:0,min:8,max:64,def:24}] },
+  { id:'dn_margin',cat:'hudpos', name:'DeathNotice — margem',
+    desc:'Margem entre nome e ícone de morte. Padrão: 20.',
+    offset:0x000185F8, orig:[0x14,0x00,0x06,0x24],
+    edit:[{label:'Margem (px)',key:'v',byte:0,min:0,max:64,def:20}] },
+
+  // CHudAmmo
+  { id:'ammo_x',   cat:'hudpos', name:'Ammo HUD — posição X',
+    desc:'Posição X base do display de munição (medido da esquerda). Padrão: 532 = 640−108. Valor 16-bit.',
+    offset:0x000177C4, orig:[0x14,0x02,0x0B,0x24],
+    edit:[{label:'X (px)',key:'v',byte16:true,min:0,max:640,def:532}] },
+  { id:'ammo_y',   cat:'hudpos', name:'Ammo HUD — margem Y',
+    desc:'Margem inferior do display de munição. Padrão: 24.',
+    offset:0x00017960, orig:[0x18,0x00,0x06,0x24],
+    edit:[{label:'Y margem (px)',key:'v',byte:0,min:0,max:200,def:24}] },
+
+  // CHudBattery
+  { id:'bat_mx',   cat:'hudpos', name:'Battery HUD — margem lateral',
+    desc:'Margem X da barra de bateria do suit. Padrão: 6.',
+    offset:0x00016AB8, orig:[0x06,0x00,0x06,0x24],
+    edit:[{label:'Margem X (px)',key:'v',byte:0,min:0,max:64,def:6}] },
+  { id:'bat_sp',   cat:'hudpos', name:'Battery HUD — espaçamento',
+    desc:'Espaçamento interno dos segmentos da barra. Padrão: 5.',
+    offset:0x00016CAC, orig:[0x05,0x00,0x06,0x24],
+    edit:[{label:'Espaçamento (px)',key:'v',byte:0,min:1,max:20,def:5}] },
+
+  // CHudGeiger — Y de cada barra de nível de radiação
+  { id:'gei_y1',   cat:'hudpos', name:'Geiger — Y nível 1',    desc:'Y da barra de nível 1 do Geiger. Padrão: 28.',  offset:0x000195E4, orig:[0x1C,0x00,0x06,0x24], edit:[{label:'Y (px)',key:'v',byte:0,min:0,max:447,def:28}] },
+  { id:'gei_y2',   cat:'hudpos', name:'Geiger — Y nível 2',    desc:'Y da barra de nível 2 do Geiger. Padrão: 40.',  offset:0x0001961C, orig:[0x28,0x00,0x06,0x24], edit:[{label:'Y (px)',key:'v',byte:0,min:0,max:447,def:40}] },
+  { id:'gei_y3',   cat:'hudpos', name:'Geiger — Y nível 3',    desc:'Y da barra de nível 3 do Geiger. Padrão: 60.',  offset:0x00019654, orig:[0x3C,0x00,0x06,0x24], edit:[{label:'Y (px)',key:'v',byte:0,min:0,max:447,def:60}] },
+  { id:'gei_y4',   cat:'hudpos', name:'Geiger — Y nível 4',    desc:'Y da barra de nível 4 do Geiger. Padrão: 80.',  offset:0x0001968C, orig:[0x50,0x00,0x06,0x24], edit:[{label:'Y (px)',key:'v',byte:0,min:0,max:447,def:80}] },
+  { id:'gei_y5',   cat:'hudpos', name:'Geiger — Y nível 5',    desc:'Y da barra de nível 5 do Geiger. Padrão: 90.',  offset:0x000196B8, orig:[0x5A,0x00,0x06,0x24], edit:[{label:'Y (px)',key:'v',byte:0,min:0,max:447,def:90}] },
+  { id:'gei_y6',   cat:'hudpos', name:'Geiger — Y nível 6',    desc:'Y da barra de nível 6 do Geiger (máximo). Padrão: 95.', offset:0x000196DC, orig:[0x5F,0x00,0x06,0x24], edit:[{label:'Y (px)',key:'v',byte:0,min:0,max:447,def:95}] },
+
+  // CHudTrain
+  { id:'trn_x',    cat:'hudpos', name:'Train HUD — X',         desc:'Posição X do HUD do trem. Padrão: 96.',          offset:0x00021098, orig:[0x60,0x00,0x07,0x24], edit:[{label:'X (px)',key:'v',byte:0,min:0,max:639,def:96}] },
+  { id:'trn_y',    cat:'hudpos', name:'Train HUD — Y',         desc:'Posição Y do HUD do trem. Padrão: 128.',         offset:0x000210A8, orig:[0x80,0x00,0x08,0x24], edit:[{label:'Y (px)',key:'v',byte:0,min:0,max:447,def:128}] },
+  { id:'trn_mg',   cat:'hudpos', name:'Train HUD — margem',    desc:'Margem interna do HUD do trem. Padrão: 16.',     offset:0x000210A0, orig:[0x10,0x00,0x06,0x24], edit:[{label:'Margem (px)',key:'v',byte:0,min:0,max:64,def:16}] },
+
+  // CHudHistoryResource (histórico de itens coletados)
+  { id:'hist_x',   cat:'hudpos', name:'ItemHistory — offset X',desc:'Offset X da direita para o histórico de itens coletados. Padrão: 144 (= 640−144=496 da esquerda).', offset:0x00012914, orig:[0x90,0x00,0x08,0x24], edit:[{label:'Offset X (px)',key:'v',byte:0,min:0,max:639,def:144}] },
+  { id:'hist_y',   cat:'hudpos', name:'ItemHistory — Y inicial',desc:'Posição Y de início do histórico de itens. Padrão: 128.',                                          offset:0x00012998, orig:[0x80,0x00,0x08,0x24], edit:[{label:'Y (px)',key:'v',byte:0,min:0,max:447,def:128}] },
+  { id:'hist_yl',  cat:'hudpos', name:'ItemHistory — Y limite', desc:'Posição Y máxima do histórico de itens antes de cortar. Padrão: 200.',                             offset:0x000129A0, orig:[0xC8,0x00,0x08,0x24], edit:[{label:'Y limite (px)',key:'v',byte:0,min:0,max:447,def:200}] },
+
+  // ISlaveHud (PS2 exclusivo — Alien Slave)
+  { id:'isl_mx',   cat:'hudpos', name:'ISlaveHud — margem X',  desc:'Margem X do HUD do Alien Slave (PS2 exclusivo). Padrão: 12.',                                      offset:0x00021C80, orig:[0x0C,0x00,0x07,0x24], edit:[{label:'Margem X (px)',key:'v',byte:0,min:0,max:64,def:12}] },
+  { id:'isl_sc',   cat:'hudpos', name:'ISlaveHud — escala',    desc:'Escala do HUD do Alien Slave (%). Padrão: 100.',                                                    offset:0x00021D5C, orig:[0x64,0x00,0x06,0x24], edit:[{label:'Escala (%)',key:'v',byte:0,min:10,max:200,def:100}] },
 
   // ── ARMAS — AMMO / CLIP ──
   { id:'glock_clip',   cat:'armas', name:'Glock — clip',       desc:'Balas por pente da Glock 17. Padrão: 17.',       offset:0x0007AF44, orig:[0x12,0x00,0x07,0x24], edit:[{label:'Clip',key:'v',byte:0,min:1,max:255,def:18}] },
@@ -510,7 +572,7 @@ function renderPatch(p) {
 }
 
 const CAT_LABELS = {
-  all:'Todos os patches', hud:'HUD', armas:'Armas — Ammo',
+  all:'Todos os patches', hud:'HUD — Cor', hudpos:'HUD — Posição', armas:'Armas — Ammo',
   firerate:'Fire Rate', reload:'Reload Time', snark:'Snark', memoria:'Memória'
 };
 
@@ -599,7 +661,7 @@ function updateSummary() {
   PATCHES.forEach(p => { catCounts[p.cat] = (catCounts[p.cat]||0) + (state[p.id].on?1:0); });
   const total = PATCHES.filter(p => state[p.id].on).length;
   document.getElementById('cnt-all').textContent = total;
-  ['hud','armas','firerate','reload','snark','memoria'].forEach(c => {
+  ['hud','hudpos','armas','firerate','reload','snark','memoria'].forEach(c => {
     document.getElementById('cnt-'+c).textContent = catCounts[c]||0;
   });
 }
