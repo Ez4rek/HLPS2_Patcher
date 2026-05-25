@@ -3,749 +3,848 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HL PS2 ELF Patcher — SLUS_200_66</title>
+<title>HL PS2 ELF Patcher</title>
 <style>
-  :root {
-    --bg:       #0d0d0d;
-    --bg2:      #141414;
-    --bg3:      #1c1c1c;
-    --border:   #2a2a2a;
-    --border2:  #383838;
-    --text:     #e8e8e8;
-    --text2:    #888;
-    --text3:    #555;
-    --green:    #22c55e;
-    --green-bg: #0d2218;
-    --red:      #ef4444;
-    --red-bg:   #1f0c0c;
-    --amber:    #f59e0b;
-    --amber-bg: #1f1608;
-    --blue:     #3b82f6;
-    --blue-bg:  #0c1a2e;
-    --mono:     'Courier New', monospace;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--mono);
-    font-size: 13px;
-    min-height: 100vh;
-  }
+:root{
+  --bg:#0b0b0f;--bg2:#111117;--bg3:#18181f;--bg4:#1e1e27;
+  --border:#252530;--border2:#32323f;--border3:#3e3e50;
+  --text:#f0f0f8;--text2:#8888aa;--text3:#55556a;
+  --green:#00e676;--green2:#00c853;--green-bg:#00251a;--green-dim:#003d26;
+  --red:#ff4f4f;--red-bg:#2a0a0a;
+  --amber:#ffab00;--amber-bg:#251c00;
+  --blue:#448aff;--blue-bg:#0a1428;
+  --purple:#ce93d8;--purple-bg:#1a0d26;
+  --cyan:#00e5ff;--cyan-bg:#00151a;
+  --mono:'JetBrains Mono','Courier New',monospace;
+  --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --radius:6px;--radius-lg:10px;
+  --shadow:0 4px 24px rgba(0,0,0,.4);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13px;min-height:100vh;overflow:hidden}
 
-  /* ── HEADER ── */
-  .header {
-    border-bottom: 1px solid var(--border);
-    padding: 1rem 1.5rem;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    flex-wrap: wrap;
-  }
-  .logo {
-    font-size: 15px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    color: var(--green);
-    text-transform: uppercase;
-  }
-  .logo span { color: var(--text2); font-weight: 400; }
-  .header-meta { font-size: 11px; color: var(--text3); margin-left: auto; }
-  .tag {
-    font-size: 10px;
-    padding: 2px 7px;
-    border-radius: 3px;
-    border: 1px solid var(--border2);
-    color: var(--text2);
-    letter-spacing: .5px;
-    text-transform: uppercase;
-  }
+/* ── LANGUAGE MODAL ── */
+.lang-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:1000;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.lang-modal{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);width:340px;overflow:hidden;box-shadow:var(--shadow)}
+.lang-modal-head{padding:1.5rem 1.5rem 1rem;border-bottom:1px solid var(--border)}
+.lang-modal-logo{font-size:11px;letter-spacing:2px;color:var(--text3);text-transform:uppercase;margin-bottom:.5rem}
+.lang-modal-title{font-size:18px;font-weight:700;color:var(--text);letter-spacing:.5px}
+.lang-modal-sub{font-size:12px;color:var(--text3);margin-top:.25rem}
+.lang-options{padding:1rem}
+.lang-option{display:flex;align-items:center;gap:12px;padding:.75rem 1rem;border-radius:var(--radius);border:1px solid var(--border2);background:var(--bg3);cursor:pointer;margin-bottom:.5rem;transition:all .15s}
+.lang-option:hover{border-color:var(--green);background:var(--green-bg)}
+.lang-option:last-child{margin-bottom:0}
+.lang-flag{font-size:22px;flex-shrink:0}
+.lang-name{font-size:14px;font-weight:600;color:var(--text)}
+.lang-native{font-size:11px;color:var(--text3);margin-top:1px}
+.lang-option .lang-check{margin-left:auto;color:var(--green);font-size:16px;display:none}
 
-  /* ── LAYOUT ── */
-  .shell { display: flex; height: calc(100vh - 57px); }
-  .sidebar {
-    width: 220px;
-    flex-shrink: 0;
-    border-right: 1px solid var(--border);
-    overflow-y: auto;
-    padding: .75rem 0;
-  }
-  .main { flex: 1; overflow-y: auto; padding: 1.5rem; }
+/* ── HEADER ── */
+.hdr{height:52px;display:flex;align-items:center;gap:10px;padding:0 1.25rem;border-bottom:1px solid var(--border);background:var(--bg2);flex-shrink:0}
+.hdr-logo{display:flex;align-items:center;gap:8px}
+.hdr-logo-icon{width:28px;height:28px;border-radius:6px;background:linear-gradient(135deg,var(--green),var(--cyan));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#000;letter-spacing:-1px;flex-shrink:0}
+.hdr-logo-text{font-size:13px;font-weight:700;letter-spacing:1px;color:var(--text);text-transform:uppercase}
+.hdr-logo-sub{font-size:10px;color:var(--text3);letter-spacing:.5px}
+.hdr-divider{width:1px;height:20px;background:var(--border2);margin:0 4px}
+.hdr-tag{font-size:10px;padding:2px 7px;border-radius:3px;border:1px solid var(--border2);color:var(--text3);letter-spacing:.5px;text-transform:uppercase;background:var(--bg3)}
+.hdr-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.hdr-file-info{font-size:11px;color:var(--text3);padding-right:4px}
+.hdr-lang-btn{display:flex;align-items:center;gap:6px;padding:4px 10px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--bg3);cursor:pointer;font-family:var(--mono);font-size:11px;color:var(--text2);transition:all .15s;letter-spacing:.3px}
+.hdr-lang-btn:hover{border-color:var(--green);color:var(--green);background:var(--green-bg)}
+.hdr-lang-btn .flag{font-size:14px}
 
-  /* ── SIDEBAR ── */
-  .sidebar-section { padding: .5rem .75rem .25rem; font-size: 10px; color: var(--text3); letter-spacing: 1px; text-transform: uppercase; }
-  .sidebar-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: .45rem 1rem;
-    cursor: pointer;
-    color: var(--text2);
-    border-left: 2px solid transparent;
-    transition: all .1s;
-    font-size: 12px;
-  }
-  .sidebar-item:hover { background: var(--bg2); color: var(--text); }
-  .sidebar-item.active { border-left-color: var(--green); background: var(--green-bg); color: var(--green); }
-  .sidebar-item .badge-count {
-    margin-left: auto;
-    font-size: 10px;
-    padding: 1px 5px;
-    border-radius: 2px;
-    background: var(--bg3);
-    color: var(--text3);
-  }
-  .sidebar-item.active .badge-count { background: var(--green-bg); color: var(--green); }
+/* ── SHELL ── */
+.shell{display:flex;height:calc(100vh - 52px);overflow:hidden}
 
-  /* ── FILE DROP ── */
-  .drop-zone {
-    border: 1px dashed var(--border2);
-    border-radius: 6px;
-    padding: 2.5rem;
-    text-align: center;
-    cursor: pointer;
-    transition: all .15s;
-    margin-bottom: 1.5rem;
-  }
-  .drop-zone:hover, .drop-zone.drag { border-color: var(--green); background: var(--green-bg); }
-  .drop-zone svg { display: block; margin: 0 auto .75rem; opacity: .4; }
-  .drop-zone p { color: var(--text2); font-size: 12px; }
-  .drop-zone p b { color: var(--text); }
-  #file-input { display: none; }
+/* ── SIDEBAR ── */
+.sidebar{width:220px;flex-shrink:0;border-right:1px solid var(--border);overflow-y:auto;background:var(--bg2);display:flex;flex-direction:column}
+.sb-top{padding:.75rem .75rem .5rem;flex:1}
+.sb-section{font-size:10px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;padding:.6rem .5rem .3rem}
+.sb-item{display:flex;align-items:center;gap:8px;padding:.45rem .75rem;cursor:pointer;color:var(--text2);border-radius:var(--radius);margin-bottom:2px;transition:all .12s;font-size:12px;position:relative}
+.sb-item:hover{background:var(--bg3);color:var(--text)}
+.sb-item.active{background:var(--green-bg);color:var(--green)}
+.sb-item .sb-icon{font-size:14px;width:20px;text-align:center;flex-shrink:0}
+.sb-item .sb-label{flex:1}
+.sb-item .sb-cnt{font-size:10px;background:var(--bg4);color:var(--text3);padding:1px 6px;border-radius:10px;min-width:22px;text-align:center;transition:all .12s}
+.sb-item.active .sb-cnt{background:var(--green-dim);color:var(--green)}
+.sb-divider{height:1px;background:var(--border);margin:.4rem .5rem}
+.sb-bottom{padding:.75rem;border-top:1px solid var(--border);background:var(--bg2)}
+.sb-stat{font-size:11px;color:var(--text3);padding:.3rem 0;display:flex;justify-content:space-between}
+.sb-stat b{color:var(--green)}
 
-  /* ── STATUS ── */
-  .status {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: .6rem 1rem;
-    border-radius: 4px;
-    font-size: 12px;
-    margin-bottom: 1.5rem;
-    border: 1px solid var(--border);
-    background: var(--bg2);
-    color: var(--text2);
-  }
-  .status.ok  { border-color: var(--green); background: var(--green-bg); color: var(--green); }
-  .status.err { border-color: var(--red);   background: var(--red-bg);   color: var(--red); }
-  .status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+/* ── MAIN ── */
+.main{flex:1;overflow-y:auto;display:flex;flex-direction:column}
+.main-inner{padding:1.25rem;flex:1}
 
-  /* ── SECTION HEADER ── */
-  .section-header {
-    display: flex;
-    align-items: baseline;
-    gap: .5rem;
-    margin-bottom: 1rem;
-    padding-bottom: .5rem;
-    border-bottom: 1px solid var(--border);
-  }
-  .section-title { font-size: 13px; color: var(--amber); letter-spacing: 1px; text-transform: uppercase; }
-  .section-sub { font-size: 11px; color: var(--text3); }
+/* ── DROP ZONE ── */
+.drop-zone{border:1.5px dashed var(--border2);border-radius:var(--radius-lg);padding:3rem 2rem;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:1.5rem;background:var(--bg2);position:relative;overflow:hidden}
+.drop-zone::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,230,118,.02) 0%,transparent 60%);pointer-events:none}
+.drop-zone:hover,.drop-zone.drag{border-color:var(--green);background:var(--green-bg);box-shadow:0 0 0 1px var(--green-dim) inset}
+.dz-icon{width:52px;height:52px;border-radius:12px;background:var(--bg3);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;transition:all .2s}
+.drop-zone:hover .dz-icon,.drop-zone.drag .dz-icon{border-color:var(--green);background:var(--green-bg)}
+.dz-icon svg{opacity:.5;transition:opacity .2s}
+.drop-zone:hover .dz-icon svg,.drop-zone.drag .dz-icon svg{opacity:1}
+.dz-main{font-size:14px;color:var(--text2);margin-bottom:.35rem}
+.dz-main b{color:var(--text)}
+.dz-sub{font-size:11px;color:var(--text3)}
+#file-input{display:none}
 
-  /* ── PATCH CARD ── */
-  .patch-grid { display: flex; flex-direction: column; gap: 6px; margin-bottom: 1.5rem; }
-  .patch-card {
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    background: var(--bg2);
-    overflow: hidden;
-  }
-  .patch-card.enabled { border-color: var(--green); }
-  .patch-head {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: .6rem .9rem;
-    cursor: pointer;
-    user-select: none;
-  }
-  .patch-head:hover { background: var(--bg3); }
-  .patch-name { font-size: 12px; color: var(--text); flex: 1; }
-  .patch-card.enabled .patch-name { color: var(--green); }
-  .patch-offset { font-size: 10px; color: var(--text3); }
-  .toggle {
-    width: 34px; height: 18px;
-    border-radius: 9px;
-    background: var(--border2);
-    position: relative;
-    cursor: pointer;
-    flex-shrink: 0;
-    border: none;
-    transition: background .2s;
-  }
-  .toggle.on { background: var(--green); }
-  .toggle::after {
-    content: '';
-    position: absolute;
-    top: 3px; left: 3px;
-    width: 12px; height: 12px;
-    border-radius: 50%;
-    background: #fff;
-    transition: left .2s;
-  }
-  .toggle.on::after { left: 19px; }
+/* ── STATUS ── */
+.status-bar{display:flex;align-items:center;gap:10px;padding:.65rem 1rem;border-radius:var(--radius);font-size:12px;margin-bottom:1.25rem;border:1px solid var(--border);background:var(--bg3);color:var(--text3)}
+.status-bar.ok{border-color:var(--green-dim);background:var(--green-bg);color:var(--green)}
+.status-bar.err{border-color:var(--red);background:var(--red-bg);color:var(--red)}
+.status-dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex-shrink:0}
 
-  .patch-body {
-    display: none;
-    padding: .75rem .9rem;
-    border-top: 1px solid var(--border);
-  }
-  .patch-body.open { display: block; }
-  .patch-desc { font-size: 11px; color: var(--text2); margin-bottom: .75rem; line-height: 1.6; }
+/* ── SUMMARY STRIP ── */
+.summary-strip{display:flex;align-items:center;gap:16px;padding:.6rem 1rem;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);font-size:11px;color:var(--text2);margin-bottom:1.25rem;flex-wrap:wrap}
+.summary-strip b{color:var(--text)}
+.summary-strip .sum-green{color:var(--green);font-weight:600}
+.summary-strip .sep{color:var(--border2)}
 
-  .field-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
-  .field-label { font-size: 11px; color: var(--text3); width: 160px; flex-shrink: 0; }
-  .field-input {
-    flex: 1;
-    font-family: var(--mono);
-    font-size: 12px;
-    height: 28px;
-    padding: 0 8px;
-    border-radius: 3px;
-    border: 1px solid var(--border2);
-    background: var(--bg3);
-    color: var(--text);
-    outline: none;
-  }
-  .field-input:focus { border-color: var(--green); }
+/* ── CAT INFO ── */
+.cat-info{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:.85rem;overflow:hidden}
+.cat-info-head{display:flex;align-items:center;gap:10px;padding:.75rem 1rem;cursor:pointer;user-select:none;transition:background .12s}
+.cat-info-head:hover{background:var(--bg3)}
+.cih-icon{font-size:18px;flex-shrink:0}
+.cih-left{flex:1}
+.cih-title{font-size:11px;font-weight:700;color:var(--amber);letter-spacing:1.5px;text-transform:uppercase}
+.cih-sub{font-size:11px;color:var(--text3);margin-top:1px}
+.cih-badge{font-size:10px;padding:2px 8px;border-radius:10px;background:var(--bg4);border:1px solid var(--border2);color:var(--text3)}
+.cih-chevron{color:var(--text3);transition:transform .2s;font-size:12px;flex-shrink:0}
+.cih-chevron.open{transform:rotate(90deg)}
+.cat-info-body{display:none;border-top:1px solid var(--border)}
+.cat-info-body.open{display:block}
+.cib-inner{padding:1rem 1.25rem;font-size:12px;color:var(--text2);line-height:1.9;background:linear-gradient(to bottom,var(--bg3),var(--bg2))}
+.cib-inner p{margin-bottom:.3rem}
+.cib-inner b{color:var(--text)}
+.cib-inner code{font-family:var(--mono);background:var(--bg4);border:1px solid var(--border2);padding:1px 6px;border-radius:3px;font-size:11px;color:var(--cyan)}
+.cib-inner ul{margin:.4rem 0 .4rem 1.1rem}
+.cib-inner li{margin-bottom:.25rem}
 
-  .bytes-row {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    margin-top: 8px;
-    flex-wrap: wrap;
-  }
-  .byte-box {
-    width: 28px; height: 24px;
-    border-radius: 3px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 11px;
-    border: 1px solid var(--border);
-    color: var(--text3);
-    background: var(--bg3);
-  }
-  .byte-box.changed { border-color: var(--green); color: var(--green); background: var(--green-bg); }
-  .bytes-label { font-size: 10px; color: var(--text3); }
+/* ── PATCH GRID ── */
+.patch-grid{display:flex;flex-direction:column;gap:4px;margin-bottom:1.25rem}
 
-  /* ── ACTIONS ── */
-  .actions {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    padding-top: 1.5rem;
-    border-top: 1px solid var(--border);
-  }
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 0 14px;
-    height: 32px;
-    border-radius: 4px;
-    border: 1px solid var(--border2);
-    background: transparent;
-    color: var(--text);
-    font-family: var(--mono);
-    font-size: 12px;
-    cursor: pointer;
-    transition: all .1s;
-    letter-spacing: .5px;
-    text-transform: uppercase;
-  }
-  .btn:hover { background: var(--bg3); border-color: var(--border2); }
-  .btn:active { transform: scale(.98); }
-  .btn:disabled { opacity: .35; cursor: not-allowed; }
-  .btn.primary { background: var(--green); border-color: var(--green); color: #000; font-weight: 700; }
-  .btn.primary:hover { opacity: .88; }
-  .btn.danger { border-color: var(--red); color: var(--red); }
-  .btn.src { border-color: var(--blue); color: var(--blue); }
+/* ── PATCH CARD ── */
+.patch-card{border:1px solid var(--border);border-radius:var(--radius);background:var(--bg2);overflow:hidden;transition:border-color .15s,box-shadow .15s}
+.patch-card:hover{border-color:var(--border2)}
+.patch-card.enabled{border-color:var(--green-dim);box-shadow:0 0 0 1px var(--green-bg) inset}
+.patch-head{display:flex;align-items:center;gap:10px;padding:.55rem 1rem;cursor:pointer;user-select:none;transition:background .1s}
+.patch-head:hover{background:var(--bg3)}
+.patch-name{font-size:12px;color:var(--text2);flex:1;transition:color .15s}
+.patch-card.enabled .patch-name{color:var(--green)}
+.patch-off{font-size:10px;color:var(--text3);font-family:var(--mono);letter-spacing:.5px}
+.toggle{width:36px;height:20px;border-radius:10px;background:var(--bg4);border:1px solid var(--border2);position:relative;cursor:pointer;flex-shrink:0;transition:background .2s,border-color .2s}
+.toggle.on{background:var(--green2);border-color:var(--green2)}
+.toggle::after{content:'';position:absolute;top:3px;left:3px;width:12px;height:12px;border-radius:50%;background:#fff;transition:left .2s,box-shadow .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.toggle.on::after{left:19px;box-shadow:0 1px 3px rgba(0,0,0,.4)}
 
-  /* ── SUMMARY BAR ── */
-  .summary {
-    display: flex;
-    gap: 1.5rem;
-    padding: .6rem .9rem;
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    font-size: 11px;
-    color: var(--text2);
-    margin-bottom: 1rem;
-    flex-wrap: wrap;
-  }
-  .summary b { color: var(--text); }
-  .summary .s-green { color: var(--green); }
+.patch-body{display:none;padding:.75rem 1rem;border-top:1px solid var(--border);background:linear-gradient(to bottom,var(--bg3),var(--bg2))}
+.patch-body.open{display:block}
+.patch-desc{font-size:11px;color:var(--text3);line-height:1.7;margin-bottom:.7rem}
+.field-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.field-label{font-size:11px;color:var(--text3);width:160px;flex-shrink:0}
+.field-input{flex:1;font-family:var(--mono);font-size:12px;height:30px;padding:0 10px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--bg4);color:var(--text);outline:none;transition:border-color .15s}
+.field-input:focus{border-color:var(--green);box-shadow:0 0 0 2px var(--green-bg)}
+.bytes-row{display:flex;align-items:center;gap:4px;margin-top:8px;flex-wrap:wrap}
+.bytes-lbl{font-size:10px;color:var(--text3);margin-right:2px}
+.byte-b{width:28px;height:24px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:11px;font-family:var(--mono);border:1px solid var(--border);color:var(--text3);background:var(--bg4);transition:all .15s}
+.byte-b.ch{border-color:var(--green);color:var(--green);background:var(--green-bg);box-shadow:0 0 6px rgba(0,230,118,.15)}
+.nop-info{font-size:11px;color:var(--text3);margin-top:6px;display:flex;align-items:center;gap:6px}
+.nop-info code{font-family:var(--mono);background:var(--green-bg);border:1px solid var(--green-dim);padding:1px 6px;border-radius:3px;font-size:10px;color:var(--green)}
 
-  /* ── SCROLLBAR ── */
-  ::-webkit-scrollbar { width: 6px; }
-  ::-webkit-scrollbar-track { background: var(--bg); }
-  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+/* ── ACTIONS ── */
+.actions-bar{padding:1rem 1.25rem;border-top:1px solid var(--border);background:var(--bg2);display:flex;gap:8px;flex-wrap:wrap;flex-shrink:0}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:0 16px;height:34px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--bg3);color:var(--text2);font-family:var(--mono);font-size:12px;cursor:pointer;transition:all .12s;letter-spacing:.3px;white-space:nowrap;text-transform:uppercase}
+.btn:hover{color:var(--text);border-color:var(--border3);background:var(--bg4)}
+.btn:active{transform:scale(.97)}
+.btn:disabled{opacity:.3;cursor:not-allowed;transform:none}
+.btn-icon{font-size:14px}
+.btn.primary{background:linear-gradient(135deg,var(--green),var(--green2));border:none;color:#000;font-weight:800;letter-spacing:.5px}
+.btn.primary:hover:not(:disabled){opacity:.88;box-shadow:0 2px 12px rgba(0,230,118,.3)}
+.btn.saveas{border-color:var(--purple-bg);color:var(--purple)}
+.btn.saveas:hover{background:var(--purple-bg);border-color:var(--purple)}
+.btn.danger{color:var(--text3)}
+.btn.danger:hover{color:var(--red);border-color:var(--red-bg)}
 
-  /* ── CATEGORIES ── */
-  .cat-section { display: none; }
-  .cat-section.visible { display: block; }
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--border3)}
 
-  /* ── FLOAT REF TABLE ── */
-  .ref-table { margin-top: .75rem; }
-  .ref-row { display: flex; gap: 8px; align-items: center; font-size: 11px; color: var(--text2); padding: 2px 0; }
-  .ref-row b { color: var(--text); width: 40px; }
-  .ref-bytes { font-family: var(--mono); color: var(--amber); font-size: 10px; }
+/* ── EMPTY STATE ── */
+.empty-state{text-align:center;padding:3rem 1rem;color:var(--text3)}
+.empty-state p{font-size:12px;margin-top:.5rem}
 </style>
 </head>
 <body>
 
-<div class="header">
-  <div class="logo">HL PS2 <span>ELF</span> Patcher</div>
-  <span class="tag">SLUS_200_66</span>
-  <span class="tag">Gearbox 2001</span>
-  <span class="header-meta" id="hdr-meta">sem arquivo carregado</span>
+<!-- LANGUAGE MODAL -->
+<div class="lang-overlay" id="lang-overlay">
+  <div class="lang-modal">
+    <div class="lang-modal-head">
+      <div class="lang-modal-logo">HL PS2 ELF PATCHER</div>
+      <div class="lang-modal-title" id="lm-title">Select Language</div>
+      <div class="lang-modal-sub" id="lm-sub">Choose your preferred language to continue</div>
+    </div>
+    <div class="lang-options">
+      <div class="lang-option" data-lang="pt">
+        <span class="lang-flag">🇧🇷</span>
+        <div>
+          <div class="lang-name">Português</div>
+          <div class="lang-native">Brasileiro</div>
+        </div>
+        <span class="lang-check">✓</span>
+      </div>
+      <div class="lang-option" data-lang="en">
+        <span class="lang-flag">🇺🇸</span>
+        <div>
+          <div class="lang-name">English</div>
+          <div class="lang-native">American English</div>
+        </div>
+        <span class="lang-check">✓</span>
+      </div>
+    </div>
+  </div>
 </div>
 
+<!-- HEADER -->
+<header class="hdr">
+  <div class="hdr-logo">
+    <div class="hdr-logo-icon">HL</div>
+    <div>
+      <div class="hdr-logo-text">PS2 ELF Patcher</div>
+      <div class="hdr-logo-sub">SLUS_200_66 · Gearbox 2001</div>
+    </div>
+  </div>
+  <div class="hdr-divider"></div>
+  <span class="hdr-tag" id="patch-count-tag">0 patches</span>
+  <div class="hdr-right">
+    <span class="hdr-file-info" id="hdr-file"></span>
+    <button class="hdr-lang-btn" id="hdr-lang-btn">
+      <span class="flag" id="hdr-flag">🌐</span>
+      <span id="hdr-lang-label">—</span>
+      <span style="color:var(--text3);font-size:10px">▼</span>
+    </button>
+  </div>
+</header>
+
 <div class="shell">
-  <nav class="sidebar" id="sidebar">
-    <div class="sidebar-section">Arquivo</div>
-    <div class="sidebar-item active" data-cat="all">Todos os patches <span class="badge-count" id="cnt-all">0</span></div>
-    <div class="sidebar-section">Categorias</div>
-    <div class="sidebar-item" data-cat="hud">HUD — Cor <span class="badge-count" id="cnt-hud">0</span></div>
-    <div class="sidebar-item" data-cat="hudpos">HUD — Posição <span class="badge-count" id="cnt-hudpos">0</span></div>
-    <div class="sidebar-item" data-cat="armas">Armas — Ammo <span class="badge-count" id="cnt-armas">0</span></div>
-    <div class="sidebar-item" data-cat="firerate">Fire Rate <span class="badge-count" id="cnt-firerate">0</span></div>
-    <div class="sidebar-item" data-cat="reload">Reload Time <span class="badge-count" id="cnt-reload">0</span></div>
-    <div class="sidebar-item" data-cat="snark">Snark <span class="badge-count" id="cnt-snark">0</span></div>
-    <div class="sidebar-item" data-cat="memoria">Memória <span class="badge-count" id="cnt-memoria">0</span></div>
-  </nav>
+  <!-- SIDEBAR -->
+  <nav class="sidebar" id="sidebar"></nav>
 
-  <main class="main">
-    <div class="drop-zone" id="drop-zone">
-      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
-        <polyline points="14 2 14 8 20 8"/>
-        <line x1="12" y1="18" x2="12" y2="12"/>
-        <polyline points="9 15 12 12 15 15"/>
-      </svg>
-      <p><b>Clique ou arraste</b> o arquivo SLUS_200_66.ELF aqui</p>
-      <p style="margin-top:6px;font-size:11px;color:#444">Tamanho esperado: ~2.66 MB · processado localmente no navegador</p>
-    </div>
-    <input type="file" id="file-input" accept=".elf,.ELF">
+  <!-- MAIN -->
+  <div class="main">
+    <div class="main-inner">
 
-    <div class="status" id="status-bar" style="display:none">
-      <span class="status-dot"></span>
-      <span id="status-text"></span>
-    </div>
-
-    <div id="patch-ui" style="display:none">
-      <div class="summary">
-        <span><b id="s-active">0</b> patches ativos</span>
-        <span><b id="s-total">0</b> disponíveis</span>
-        <span class="s-green" id="s-file"></span>
+      <!-- DROP ZONE -->
+      <div class="drop-zone" id="drop-zone">
+        <div class="dz-icon">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.5">
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="12" y1="18" x2="12" y2="12"/>
+            <polyline points="9 15 12 12 15 15"/>
+          </svg>
+        </div>
+        <p class="dz-main" id="dz-main"></p>
+        <p class="dz-sub" id="dz-sub"></p>
       </div>
-      <div id="patch-content"></div>
-      <div class="actions">
-        <button class="btn primary" id="btn-apply" disabled>▶ Aplicar e baixar ELF</button>
-        <button class="btn src" id="btn-src">⬇ Baixar código fonte</button>
-        <button class="btn danger" id="btn-reset">↺ Resetar tudo</button>
+      <input type="file" id="file-input" accept=".elf,.ELF">
+
+      <!-- STATUS -->
+      <div class="status-bar" id="status-bar" style="display:none">
+        <span class="status-dot"></span>
+        <span id="status-text"></span>
       </div>
+
+      <!-- PATCH UI -->
+      <div id="patch-ui" style="display:none">
+        <div class="summary-strip">
+          <span><b id="s-active">0</b> <span id="s-active-lbl"></span></span>
+          <span class="sep">·</span>
+          <span><b id="s-total">0</b> <span id="s-avail-lbl"></span></span>
+          <span class="sep">·</span>
+          <span class="sum-green" id="s-file"></span>
+        </div>
+        <div id="patch-content"></div>
+      </div>
+
     </div>
-  </main>
+
+    <!-- ACTION BAR -->
+    <div class="actions-bar" id="actions-bar" style="display:none">
+      <button class="btn primary" id="btn-apply" disabled>
+        <span class="btn-icon">▶</span><span id="btn-apply-lbl"></span>
+      </button>
+      <button class="btn saveas" id="btn-saveas" disabled>
+        <span class="btn-icon">💾</span><span id="btn-saveas-lbl"></span>
+      </button>
+      <button class="btn danger" id="btn-reset">
+        <span class="btn-icon">↺</span><span id="btn-reset-lbl"></span>
+      </button>
+    </div>
+  </div>
 </div>
 
 <script>
-const PATCHES = [
-  // ── HUD ──
-  { id:'hud_r',    cat:'hud',      name:'HUD — cor vermelho (R)',
-    desc:'Canal R da cor da HUD principal (health, ammo, suit). Padrão: 255.',
-    offset:0x000E59FC, orig:[0xFF,0x00,0x04,0x24],
-    edit:[{label:'R (0–255)',key:'v',byte:0,min:0,max:255,def:255}] },
-  { id:'hud_g',    cat:'hud',      name:'HUD — cor verde (G)',
-    desc:'Canal G da cor da HUD principal. Padrão: 160.',
-    offset:0x000E5A08, orig:[0xA0,0x00,0x04,0x24],
-    edit:[{label:'G (0–255)',key:'v',byte:0,min:0,max:255,def:160}] },
-  { id:'hud_b',    cat:'hud',      name:'HUD — cor azul (B)',
-    desc:'Canal B da cor da HUD principal. Padrão: 0 (hardcoded via DADDU). Atenção: efeito limitado sem trocar a instrução.',
-    offset:0x000E5A14, orig:[0x2D,0x20,0x00,0x00],
-    edit:[{label:'B (0–255)',key:'v',byte:0,min:0,max:255,def:0}] },
-  { id:'flash_y',  cat:'hud',      name:'Flashlight HUD — ajuste Y',
-    desc:'Offset vertical da lanterna na HUD. Valor signed: positivo = mais abaixo, negativo = mais acima. Padrão: +24.',
-    offset:0x0001922C, orig:[0x18,0x00,0x73,0x24],
-    edit:[{label:'Y offset (px signed)',key:'v',byte16s:true,min:-128,max:127,def:24}] },
-  { id:'flash_x',  cat:'hud',      name:'Flashlight HUD — ajuste X',
-    desc:'Offset horizontal da lanterna. Valor signed 16-bit. Padrão: -8.',
-    offset:0x00019220, orig:[0xF8,0xFF,0xF2,0x24],
-    edit:[{label:'X offset (px signed)',key:'v',byte16:true,min:-640,max:640,def:-8}] },
+// ════════════════════════════════════════════════════════
+// I18N
+// ════════════════════════════════════════════════════════
+const I18N = {
+pt:{
+  lang_flag:'🇧🇷', lang_label:'Português',
+  lm_title:'Selecionar idioma', lm_sub:'Escolha o idioma para continuar',
+  nav_all:'Todos', nav_section:'Categorias',
+  cat_all:'Todos os patches',
+  cat_hud:'HUD — Cores',cat_hudpos:'HUD — Posições',
+  cat_armas:'Armas — Ammo',cat_firerate:'Fire Rate',
+  cat_reload:'Reload Time',cat_snark:'Snark',cat_rede:'Rede / Connect',cat_memoria:'Memória',
+  icon_hud:'🎨',icon_hudpos:'📐',icon_armas:'🔫',icon_firerate:'⚡',
+  icon_reload:'🔄',icon_snark:'🐛',icon_rede:'🌐',icon_memoria:'💾',
+  active:'patches ativos',available:'disponíveis',bytes:'bytes:',
+  apply:'Aplicar e Baixar',saveas:'Salvar Como…',reset:'Resetar Tudo',
+  dz_main:'<b>Clique ou arraste</b> o arquivo SLUS_200_66.ELF',
+  dz_sub:'~2.66 MB · processado localmente, sem upload',
+  loaded:'Arquivo carregado — {n} patches disponíveis',
+  applied:'{n} patches aplicados.',reset_msg:'Patches resetados.',
+  err_nofile:'Nenhum arquivo carregado.',
+  patches_hdr:'patches',
 
-  // ── HUD — POSIÇÃO ──
-  // DeathNotice (kill feed)
-  { id:'dn_x',     cat:'hudpos', name:'DeathNotice — X',
-    desc:'Posição horizontal do kill feed (X em pixels). Padrão: 420 (lado direito).',
-    offset:0x000184B8, orig:[0xA4,0x00,0x07,0x24],
-    edit:[{label:'X (px)',key:'v',byte16:true,min:0,max:639,def:420}] },
-  { id:'dn_y',     cat:'hudpos', name:'DeathNotice — Y',
-    desc:'Posição vertical do kill feed (Y em pixels, a partir do topo). Padrão: 84.',
-    offset:0x0001858C, orig:[0x54,0x00,0x07,0x24],
-    edit:[{label:'Y (px)',key:'v',byte:0,min:0,max:447,def:84}] },
-  { id:'dn_lh',    cat:'hudpos', name:'DeathNotice — altura de linha',
-    desc:'Espaçamento vertical entre entradas do kill feed. Padrão: 24.',
-    offset:0x000189C4, orig:[0x18,0x00,0x06,0x24],
-    edit:[{label:'Altura (px)',key:'v',byte:0,min:8,max:64,def:24}] },
-  { id:'dn_margin',cat:'hudpos', name:'DeathNotice — margem',
-    desc:'Margem entre nome e ícone de morte. Padrão: 20.',
-    offset:0x000185F8, orig:[0x14,0x00,0x06,0x24],
-    edit:[{label:'Margem (px)',key:'v',byte:0,min:0,max:64,def:20}] },
+  // Category descriptions
+  info_hud:{
+    title:'Sistema de cores da HUD',
+    sub:'Cor global aplicada em todos os elementos',
+    body:`A HUD do Half-Life PS2 usa uma <b>cor global</b> definida por 3 canais hardcoded no cliente (<code>cl_dll/cl_hud.cpp</code>) e aplicada em vida, munição, suit e flashlight via vtable no objeto <code>0x00312E28</code>.\n\nCanais <b>R</b> e <b>G</b> são ADDIU imediatos — editáveis byte a byte. O canal <b>B</b> usa DADDU com $zero (hardcoded em zero); alterar requer substituir a instrução inteira.\n\nA cor padrão <code>RGB(255, 160, 0)</code> é o laranja clássico do Half-Life, equivalente às cvars <code>hud_r 255 hud_g 160 hud_b 0</code> da versão PC.`
+  },
+  info_hudpos:{
+    title:'Posicionamento dos elementos',
+    sub:'Coordenadas fixas em pixels na tela 640×448',
+    body:`Cada elemento tem sua própria função <b>Draw()</b> com posições hardcoded. O PS2 usa resolução <b>640×448</b> (NTSC).\n\n<b>Kill Feed (DeathNotice)</b> — canto superior direito: X=420, Y=84\n<b>Ammo HUD</b> — canto inferior direito: X base = 532 (= 640−108)\n<b>Geiger</b> — 6 barras empilhadas com Y individual: 28 → 95px\n<b>Train HUD</b> — indicador do trem: X=96, Y=128\n<b>Item Pickup</b> — histórico no lado direito da tela\n<b>ISlaveHud</b> — exclusivo PS2 (Alien Slave jogável)`
+  },
+  info_armas:{
+    title:'Munição e capacidade de armas',
+    sub:'iMaxClip e iMaxAmmo1 da struct ItemInfo',
+    body:`Cada arma preenche a struct <code>ItemInfo</code> via <b>GetItemInfo()</b>:\n\n<b>iMaxClip</b> (offset +28) — balas/projéteis por pente ou carga\n<b>iMaxAmmo1</b> (offset +12) — máximo carregável no inventário\n\nAmbos são ADDIU imediatos de 1 byte (0–255). Gauss e Egon <b>compartilham</b> o mesmo pool de energia — alterar um afeta os dois.`
+  },
+  info_firerate:{
+    title:'Taxa de disparo',
+    sub:'Float IEEE 754 — instrução LUI + ORI',
+    body:`O fire rate é um <b>float IEEE 754</b> dividido em duas instruções MIPS:\n<code>LUI $at, hi16</code> → carrega a parte alta\n<code>ORI $at, $at, lo16</code> → completa o valor e envia à FPU\n\nEditar requer mudar os <b>4 bytes da instrução ORI</b> (little-endian). Valores menores = disparo mais rápido. Abaixo de 0.05s podem ocorrer bugs de animação.`
+  },
+  info_reload:{
+    title:'Tempo de recarga',
+    sub:'Float via instrução LUI (sem ORI)',
+    body:`O reload time é um <b>float hardcoded</b> na função <code>Reload()</code> de cada arma. Usa apenas <code>LUI</code> sem ORI (parte baixa do float = 0).\n\nEditar: mude os <b>2 primeiros bytes</b> da instrução LUI.\n\n<b>Crossbow</b>: 4.5s  ·  <b>Python</b>: 4.0s  ·  <b>RPG</b>: 3.5s\n<b>Shotgun</b>: 2.0s (loop de shell)  ·  <b>MP5/Glock/Egon</b>: 1.5s`
+  },
+  info_snark:{
+    title:'CSqueakGrenade',
+    sub:'Gearbox modificou vs versão PC',
+    body:`O Snark é uma granada viva que persegue inimigos. A Gearbox dobrou o lifetime vs PC:\n\n<b>Lifetime</b>: PC=15s → PS2=30s antes de explodir\n<b>Clip</b>: PS2 adicionou clip de 5 (PC usava WEAPON_NOCLIP=-1)\n\n<b>NOP A+B</b>: elimina o consumo de ammo ao lançar. NOP em MIPS = <code>0x00000000</code>.\n\nLifetime de 32767 ≈ 9 horas (efetivamente infinito).`
+  },
+  info_rede:{
+    title:'Bypass WON + DEV9',
+    sub:'Permite usar connect sem autenticação online',
+    body:`O HL PS2 exige dois sistemas antes de aceitar o comando <code>connect</code>:\n\n<b>DEV9</b> — adaptador de rede do PS2 (PCSX2 precisa tê-lo configurado)\n<b>WON</b> — servidor de autenticação da Valve, desligado desde 2004\n\nSem os dois, o comando simplesmente não faz nada.\n\n<b>Patch 1 (bypass rede)</b>: remove a verificação de DEV9. O jogo tenta enviar o pacote mesmo sem o adaptador configurado no PCSX2.\n<b>Patch 2 (bypass WON state)</b>: ignora a checagem de estado de autenticação WON.\n<b>Patch 3 (bypass WON type)</b>: ignora a exigência de que o tipo de auth seja WON (val=3).\n\nCom os 3 patches, <code>connect IP:27015</code> funciona contra qualquer servidor GoldSrc — incluindo o <code>hl_ps2_server.py</code> desta sessão.`
+  },
+  info_memoria:{
+    title:'Limites de memória',
+    sub:'PS2 tem 32 MB de RAM — crashes em mapas grandes',
+    body:`Em mapas grandes, buffers estáticos podem encher e causar crash:\n\n<b>MAX_DECALS (512)</b> — marcas de tiro na geometria. Reduzir a 128 libera ~1 MB.\n<b>MAX_TEMP_ENTS (350)</b> — partículas temporárias (sangue, faíscas). Reduzir a 150 alivia picos de memória.\n<b>MAX_EDICTS (676)</b> — entidades simultâneas. Aumentar ajuda mapas densos, mas consome mais RAM.`
+  },
+},
+en:{
+  lang_flag:'🇺🇸', lang_label:'English',
+  lm_title:'Select Language', lm_sub:'Choose your preferred language to continue',
+  nav_all:'All', nav_section:'Categories',
+  cat_all:'All patches',
+  cat_hud:'HUD — Colors',cat_hudpos:'HUD — Positions',
+  cat_armas:'Weapons — Ammo',cat_firerate:'Fire Rate',
+  cat_reload:'Reload Time',cat_snark:'Snark',cat_rede:'Network / Connect',cat_memoria:'Memory',
+  icon_hud:'🎨',icon_hudpos:'📐',icon_armas:'🔫',icon_firerate:'⚡',
+  icon_reload:'🔄',icon_snark:'🐛',icon_rede:'🌐',icon_memoria:'💾',
+  active:'active patches',available:'available',bytes:'bytes:',
+  apply:'Apply & Download',saveas:'Save As…',reset:'Reset All',
+  dz_main:'<b>Click or drag</b> SLUS_200_66.ELF here',
+  dz_sub:'~2.66 MB · processed locally, no upload',
+  loaded:'File loaded — {n} patches available',
+  applied:'{n} patches applied.',reset_msg:'Patches reset.',
+  err_nofile:'No file loaded.',
+  patches_hdr:'patches',
 
-  // CHudAmmo
-  { id:'ammo_x',   cat:'hudpos', name:'Ammo HUD — posição X',
-    desc:'Posição X base do display de munição (medido da esquerda). Padrão: 532 = 640−108. Valor 16-bit.',
-    offset:0x000177C4, orig:[0x14,0x02,0x0B,0x24],
-    edit:[{label:'X (px)',key:'v',byte16:true,min:0,max:640,def:532}] },
-  { id:'ammo_y',   cat:'hudpos', name:'Ammo HUD — margem Y',
-    desc:'Margem inferior do display de munição. Padrão: 24.',
-    offset:0x00017960, orig:[0x18,0x00,0x06,0x24],
-    edit:[{label:'Y margem (px)',key:'v',byte:0,min:0,max:200,def:24}] },
+  info_hud:{
+    title:'HUD Color System',
+    sub:'Global color applied to all elements',
+    body:`The PS2 HUD uses a <b>global color</b> defined by 3 hardcoded channels in <code>cl_dll/cl_hud.cpp</code>, applied to health, ammo, suit and flashlight via vtable at <code>0x00312E28</code>.\n\n<b>R</b> and <b>G</b> are ADDIU immediates — editable byte by byte. The <b>B</b> channel uses DADDU with $zero (hardcoded to zero); changing it requires replacing the full instruction.\n\nDefault color <code>RGB(255, 160, 0)</code> is the classic Half-Life orange, equivalent to PC cvars <code>hud_r 255 hud_g 160 hud_b 0</code>.`
+  },
+  info_hudpos:{
+    title:'Element Positioning',
+    sub:'Fixed pixel coordinates on 640×448 screen',
+    body:`Each element has its own <b>Draw()</b> with hardcoded positions. PS2 uses <b>640×448</b> resolution (NTSC).\n\n<b>Kill Feed (DeathNotice)</b> — upper right: X=420, Y=84\n<b>Ammo HUD</b> — lower right: base X=532 (= 640−108)\n<b>Geiger</b> — 6 stacked bars with individual Y: 28 → 95px\n<b>Train HUD</b> — train speed indicator: X=96, Y=128\n<b>Item Pickup</b> — item history on the right side\n<b>ISlaveHud</b> — PS2 exclusive (playable Alien Slave)`
+  },
+  info_armas:{
+    title:'Weapon Ammo & Capacity',
+    sub:'iMaxClip and iMaxAmmo1 in the ItemInfo struct',
+    body:`Each weapon fills the <code>ItemInfo</code> struct via <b>GetItemInfo()</b>:\n\n<b>iMaxClip</b> (offset +28) — rounds per magazine or load\n<b>iMaxAmmo1</b> (offset +12) — maximum carried in inventory\n\nBoth are 1-byte ADDIU immediates (0–255). Gauss and Egon <b>share</b> the same energy pool — editing one affects both.`
+  },
+  info_firerate:{
+    title:'Fire Rate',
+    sub:'IEEE 754 float — LUI + ORI instruction pair',
+    body:`Fire rate is an <b>IEEE 754 float</b> split across two MIPS instructions:\n<code>LUI $at, hi16</code> → loads the high part\n<code>ORI $at, $at, lo16</code> → completes the value, sends to FPU\n\nEditing requires changing <b>all 4 bytes of the ORI instruction</b> (little-endian). Lower = faster. Below 0.05s may cause animation bugs.`
+  },
+  info_reload:{
+    title:'Reload Time',
+    sub:'Float via LUI-only instruction (no ORI)',
+    body:`Reload time is a <b>hardcoded float</b> in each weapon's <code>Reload()</code>. Uses only <code>LUI</code>, no ORI (float low part = 0).\n\nTo edit: change the <b>first 2 bytes</b> of the LUI instruction.\n\n<b>Crossbow</b>: 4.5s  ·  <b>Python</b>: 4.0s  ·  <b>RPG</b>: 3.5s\n<b>Shotgun</b>: 2.0s (per shell)  ·  <b>MP5/Glock/Egon</b>: 1.5s`
+  },
+  info_snark:{
+    title:'CSqueakGrenade',
+    sub:'Gearbox modifications vs PC version',
+    body:`The Snark is a living grenade that chases enemies. Gearbox doubled the PC lifetime:\n\n<b>Lifetime</b>: PC=15s → PS2=30s before self-destruct\n<b>Clip</b>: PS2 added a clip of 5 (PC used WEAPON_NOCLIP=-1)\n\n<b>NOP A+B</b>: removes ammo consumption on throw. NOP in MIPS = <code>0x00000000</code>.\n\nLifetime 32767 ≈ 9 hours (effectively infinite).`
+  },
+  info_rede:{
+    title:'WON + DEV9 Bypass',
+    sub:'Enable connect without online authentication',
+    body:`HL PS2 requires two systems before accepting the <code>connect</code> command:\n\n<b>DEV9</b> — PS2 network adapter (PCSX2 needs it configured)\n<b>WON</b> — Valve authentication server, shut down in 2004\n\nWithout both, the command silently does nothing.\n\n<b>Patch 1 (network bypass)</b>: removes DEV9 check. Game attempts to send the packet even without the adapter configured in PCSX2.\n<b>Patch 2 (WON state bypass)</b>: ignores WON authentication state check.\n<b>Patch 3 (WON type bypass)</b>: ignores the requirement that auth type equals WON (val=3).\n\nWith all 3 patches, <code>connect IP:27015</code> works against any GoldSrc server — including this session's <code>hl_ps2_server.py</code>.`
+  },
+  info_memoria:{
+    title:'Memory Limits',
+    sub:'PS2 has 32 MB RAM — crashes on large maps',
+    body:`On large maps, static buffers can fill and crash the game:\n\n<b>MAX_DECALS (512)</b> — bullet marks on geometry. Reducing to 128 frees ~1 MB.\n<b>MAX_TEMP_ENTS (350)</b> — temporary particles (blood, sparks). Reducing to 150 eases memory spikes.\n<b>MAX_EDICTS (676)</b> — simultaneous entities. Increasing helps dense maps but uses more RAM.`
+  },
+}};
 
-  // CHudBattery
-  { id:'bat_mx',   cat:'hudpos', name:'Battery HUD — margem lateral',
-    desc:'Margem X da barra de bateria do suit. Padrão: 6.',
-    offset:0x00016AB8, orig:[0x06,0x00,0x06,0x24],
-    edit:[{label:'Margem X (px)',key:'v',byte:0,min:0,max:64,def:6}] },
-  { id:'bat_sp',   cat:'hudpos', name:'Battery HUD — espaçamento',
-    desc:'Espaçamento interno dos segmentos da barra. Padrão: 5.',
-    offset:0x00016CAC, orig:[0x05,0x00,0x06,0x24],
-    edit:[{label:'Espaçamento (px)',key:'v',byte:0,min:1,max:20,def:5}] },
+// ════════════════════════════════════════════════════════
+// PATCHES
+// ════════════════════════════════════════════════════════
+const PATCHES=[
+  // HUD COLORS
+  {id:'hud_r',cat:'hud',n:{pt:'HUD — Vermelho (R)',en:'HUD — Red (R)'},d:{pt:'Canal R da cor global da HUD. Padrão: 255.',en:'Global HUD color R channel. Default: 255.'},offset:0x000E59FC,orig:[0xFF,0x00,0x04,0x24],edit:[{lp:'R (0–255)',le:'R (0–255)',k:'v',byte:0,min:0,max:255,def:255}]},
+  {id:'hud_g',cat:'hud',n:{pt:'HUD — Verde (G)',en:'HUD — Green (G)'},d:{pt:'Canal G da cor global da HUD. Padrão: 160.',en:'Global HUD color G channel. Default: 160.'},offset:0x000E5A08,orig:[0xA0,0x00,0x04,0x24],edit:[{lp:'G (0–255)',le:'G (0–255)',k:'v',byte:0,min:0,max:255,def:160}]},
+  {id:'hud_b',cat:'hud',n:{pt:'HUD — Azul (B)',en:'HUD — Blue (B)'},d:{pt:'Canal B (hardcoded via DADDU — efeito limitado). Padrão: 0.',en:'B channel (hardcoded via DADDU — limited effect). Default: 0.'},offset:0x000E5A14,orig:[0x2D,0x20,0x00,0x00],edit:[{lp:'B (0–255)',le:'B (0–255)',k:'v',byte:0,min:0,max:255,def:0}]},
+  {id:'flash_y',cat:'hud',n:{pt:'Flashlight — Offset Y',en:'Flashlight — Y Offset'},d:{pt:'Ajuste vertical da flashlight na HUD (signed). Padrão: +24.',en:'Flashlight HUD vertical offset (signed). Default: +24.'},offset:0x0001922C,orig:[0x18,0x00,0x73,0x24],edit:[{lp:'Y offset (px)',le:'Y offset (px)',k:'v',byte16s:true,min:-128,max:127,def:24}]},
+  {id:'flash_x',cat:'hud',n:{pt:'Flashlight — Offset X',en:'Flashlight — X Offset'},d:{pt:'Ajuste horizontal da flashlight (signed 16-bit). Padrão: -8.',en:'Flashlight HUD horizontal offset (signed 16-bit). Default: -8.'},offset:0x00019220,orig:[0xF8,0xFF,0xF2,0x24],edit:[{lp:'X offset (px)',le:'X offset (px)',k:'v',byte16:true,min:-640,max:640,def:-8}]},
+  // HUD POSITIONS
+  {id:'dn_x',cat:'hudpos',n:{pt:'Kill Feed — X',en:'Kill Feed — X'},d:{pt:'Posição X do kill feed (0=esq, 640=dir). Padrão: 420.',en:'Kill feed X position (0=left, 640=right). Default: 420.'},offset:0x000184B8,orig:[0xA4,0x00,0x07,0x24],edit:[{lp:'X (px)',le:'X (px)',k:'v',byte16:true,min:0,max:640,def:420}]},
+  {id:'dn_y',cat:'hudpos',n:{pt:'Kill Feed — Y',en:'Kill Feed — Y'},d:{pt:'Posição Y do kill feed (0=topo). Padrão: 84.',en:'Kill feed Y position (0=top). Default: 84.'},offset:0x0001858C,orig:[0x54,0x00,0x07,0x24],edit:[{lp:'Y (px)',le:'Y (px)',k:'v',byte:0,min:0,max:255,def:84}]},
+  {id:'dn_lh',cat:'hudpos',n:{pt:'Kill Feed — Altura de linha',en:'Kill Feed — Line Height'},d:{pt:'Espaçamento vertical entre entradas do kill feed. Padrão: 24.',en:'Vertical spacing between kill feed entries. Default: 24.'},offset:0x000189C4,orig:[0x18,0x00,0x07,0x24],edit:[{lp:'Altura (px)',le:'Height (px)',k:'v',byte:0,min:8,max:64,def:24}]},
+  {id:'dn_mg',cat:'hudpos',n:{pt:'Kill Feed — Margem',en:'Kill Feed — Margin'},d:{pt:'Margem entre entradas do kill feed. Padrão: 20.',en:'Margin between kill feed entries. Default: 20.'},offset:0x000185F8,orig:[0x14,0x00,0x07,0x24],edit:[{lp:'Margem (px)',le:'Margin (px)',k:'v',byte:0,min:0,max:64,def:20}]},
+  {id:'ammo_x',cat:'hudpos',n:{pt:'Ammo HUD — X',en:'Ammo HUD — X'},d:{pt:'Posição X base do display de munição (uint16). Padrão: 532 = 640−108.',en:'Ammo display base X position (uint16). Default: 532 = 640−108.'},offset:0x000177C4,orig:[0x14,0x02,0x0B,0x24],edit:[{lp:'X (px)',le:'X (px)',k:'v',byte16:true,min:0,max:640,def:532}]},
+  {id:'ammo_y',cat:'hudpos',n:{pt:'Ammo HUD — Margem Y',en:'Ammo HUD — Y Margin'},d:{pt:'Margem inferior do display de munição. Padrão: 24.',en:'Ammo display bottom margin. Default: 24.'},offset:0x00017960,orig:[0x18,0x00,0x06,0x24],edit:[{lp:'Margem Y (px)',le:'Y margin (px)',k:'v',byte:0,min:0,max:200,def:24}]},
+  {id:'bat_mg',cat:'hudpos',n:{pt:'Battery HUD — Margem',en:'Battery HUD — Margin'},d:{pt:'Margem lateral da barra de suit/bateria. Padrão: 6.',en:'Suit/battery bar side margin. Default: 6.'},offset:0x00016AB8,orig:[0x06,0x00,0x06,0x24],edit:[{lp:'Margem (px)',le:'Margin (px)',k:'v',byte:0,min:0,max:64,def:6}]},
+  {id:'gei_y1',cat:'hudpos',n:{pt:'Geiger — Nível 1 Y',en:'Geiger — Level 1 Y'},d:{pt:'Y da barra de radiação nível 1 (mais fraco). Padrão: 28.',en:'Radiation bar level 1 Y (weakest). Default: 28.'},offset:0x000195E4,orig:[0x1C,0x00,0x06,0x24],edit:[{lp:'Y (px)',le:'Y (px)',k:'v',byte:0,min:0,max:447,def:28}]},
+  {id:'gei_y2',cat:'hudpos',n:{pt:'Geiger — Nível 2 Y',en:'Geiger — Level 2 Y'},d:{pt:'Y da barra de radiação nível 2. Padrão: 40.',en:'Radiation bar level 2 Y. Default: 40.'},offset:0x0001961C,orig:[0x28,0x00,0x06,0x24],edit:[{lp:'Y (px)',le:'Y (px)',k:'v',byte:0,min:0,max:447,def:40}]},
+  {id:'gei_y3',cat:'hudpos',n:{pt:'Geiger — Nível 3 Y',en:'Geiger — Level 3 Y'},d:{pt:'Y da barra de radiação nível 3. Padrão: 60.',en:'Radiation bar level 3 Y. Default: 60.'},offset:0x00019654,orig:[0x3C,0x00,0x06,0x24],edit:[{lp:'Y (px)',le:'Y (px)',k:'v',byte:0,min:0,max:447,def:60}]},
+  {id:'gei_y4',cat:'hudpos',n:{pt:'Geiger — Nível 4 Y',en:'Geiger — Level 4 Y'},d:{pt:'Y da barra de radiação nível 4. Padrão: 80.',en:'Radiation bar level 4 Y. Default: 80.'},offset:0x0001968C,orig:[0x50,0x00,0x06,0x24],edit:[{lp:'Y (px)',le:'Y (px)',k:'v',byte:0,min:0,max:447,def:80}]},
+  {id:'gei_y5',cat:'hudpos',n:{pt:'Geiger — Nível 5 Y',en:'Geiger — Level 5 Y'},d:{pt:'Y da barra de radiação nível 5. Padrão: 90.',en:'Radiation bar level 5 Y. Default: 90.'},offset:0x000196B8,orig:[0x5A,0x00,0x06,0x24],edit:[{lp:'Y (px)',le:'Y (px)',k:'v',byte:0,min:0,max:447,def:90}]},
+  {id:'gei_y6',cat:'hudpos',n:{pt:'Geiger — Nível 6 Y (máx)',en:'Geiger — Level 6 Y (max)'},d:{pt:'Y da barra de radiação nível 6 — zona de perigo. Padrão: 95.',en:'Radiation bar level 6 Y — danger zone. Default: 95.'},offset:0x000196DC,orig:[0x5F,0x00,0x06,0x24],edit:[{lp:'Y (px)',le:'Y (px)',k:'v',byte:0,min:0,max:447,def:95}]},
+  {id:'trn_x',cat:'hudpos',n:{pt:'Train HUD — X',en:'Train HUD — X'},d:{pt:'Posição X do indicador do trem. Padrão: 96.',en:'Train speed indicator X. Default: 96.'},offset:0x00021098,orig:[0x60,0x00,0x07,0x24],edit:[{lp:'X (px)',le:'X (px)',k:'v',byte:0,min:0,max:639,def:96}]},
+  {id:'trn_y',cat:'hudpos',n:{pt:'Train HUD — Y',en:'Train HUD — Y'},d:{pt:'Posição Y do indicador do trem. Padrão: 128.',en:'Train speed indicator Y. Default: 128.'},offset:0x000210A8,orig:[0x80,0x00,0x08,0x24],edit:[{lp:'Y (px)',le:'Y (px)',k:'v',byte:0,min:0,max:447,def:128}]},
+  {id:'hist_x',cat:'hudpos',n:{pt:'Item Pickup — Offset X',en:'Item Pickup — X Offset'},d:{pt:'Offset X da direita para o histórico de itens. Padrão: 144.',en:'Right-side X offset for item history. Default: 144.'},offset:0x00012914,orig:[0x90,0x00,0x08,0x24],edit:[{lp:'Offset X (px)',le:'X offset (px)',k:'v',byte:0,min:0,max:255,def:144}]},
+  {id:'hist_y',cat:'hudpos',n:{pt:'Item Pickup — Y inicial',en:'Item Pickup — Start Y'},d:{pt:'Posição Y inicial do histórico. Padrão: 128.',en:'Item history starting Y. Default: 128.'},offset:0x00012998,orig:[0x80,0x00,0x08,0x24],edit:[{lp:'Y (px)',le:'Y (px)',k:'v',byte:0,min:0,max:447,def:128}]},
+  {id:'hist_yl',cat:'hudpos',n:{pt:'Item Pickup — Y limite',en:'Item Pickup — Y Limit'},d:{pt:'Y máximo do histórico. Padrão: 200.',en:'Item history maximum Y. Default: 200.'},offset:0x000129A0,orig:[0xC8,0x00,0x08,0x24],edit:[{lp:'Y limite (px)',le:'Y limit (px)',k:'v',byte:0,min:0,max:447,def:200}]},
+  {id:'isl_mg',cat:'hudpos',n:{pt:'ISlaveHud — Margem [PS2]',en:'ISlaveHud — Margin [PS2]'},d:{pt:'Margem do HUD do Alien Slave (exclusivo PS2). Padrão: 12.',en:'Alien Slave HUD margin (PS2 exclusive). Default: 12.'},offset:0x00021C80,orig:[0x0C,0x00,0x07,0x24],edit:[{lp:'Margem (px)',le:'Margin (px)',k:'v',byte:0,min:0,max:64,def:12}]},
+  {id:'isl_sc',cat:'hudpos',n:{pt:'ISlaveHud — Escala [PS2]',en:'ISlaveHud — Scale [PS2]'},d:{pt:'Escala do HUD do Alien Slave (%). Padrão: 100.',en:'Alien Slave HUD scale (%). Default: 100.'},offset:0x00021D5C,orig:[0x64,0x00,0x07,0x24],edit:[{lp:'Escala (1–255)',le:'Scale (1–255)',k:'v',byte:0,min:1,max:255,def:100}]},
+  // WEAPONS
+  {id:'glock_clip',cat:'armas',n:{pt:'Glock — Clip',en:'Glock — Clip'},d:{pt:'Balas por pente. Padrão: 17.',en:'Rounds per mag. Default: 17.'},offset:0x0007AF44,orig:[0x12,0x00,0x07,0x24],edit:[{lp:'Clip',le:'Clip',k:'v',byte:0,min:1,max:255,def:18}]},
+  {id:'glock_ammo',cat:'armas',n:{pt:'Glock — Max ammo',en:'Glock — Max ammo'},d:{pt:'Máximo de 9mm. Padrão: 250.',en:'Max 9mm ammo. Default: 250.'},offset:0x0007AF34,orig:[0x97,0x00,0x08,0x24],edit:[{lp:'Max ammo',le:'Max ammo',k:'v',byte:0,min:1,max:255,def:151}]},
+  {id:'mp5_clip',cat:'armas',n:{pt:'MP5 — Clip',en:'MP5 — Clip'},d:{pt:'Balas por pente do MP5. Padrão: 50.',en:'MP5 rounds per mag. Default: 50.'},offset:0x000AAF94,orig:[0x32,0x00,0x06,0x24],edit:[{lp:'Clip',le:'Clip',k:'v',byte:0,min:1,max:255,def:50}]},
+  {id:'mp5_ammo',cat:'armas',n:{pt:'MP5 — Max ammo',en:'MP5 — Max ammo'},d:{pt:'Máximo de 9mm para MP5. Padrão: 250.',en:'Max 9mm for MP5. Default: 250.'},offset:0x000AAF90,orig:[0xFA,0x00,0x08,0x24],edit:[{lp:'Max ammo',le:'Max ammo',k:'v',byte:0,min:1,max:255,def:250}]},
+  {id:'python_clip',cat:'armas',n:{pt:'Python — Clip',en:'Python — Clip'},d:{pt:'Balas por cilindro. Padrão: 6.',en:'Rounds per cylinder. Default: 6.'},offset:0x000D483C,orig:[0x06,0x00,0x07,0x24],edit:[{lp:'Clip',le:'Clip',k:'v',byte:0,min:1,max:255,def:6}]},
+  {id:'python_ammo',cat:'armas',n:{pt:'Python — Max ammo',en:'Python — Max ammo'},d:{pt:'Máximo de .357. Padrão: 36.',en:'Max .357 ammo. Default: 36.'},offset:0x000D4840,orig:[0x24,0x00,0x08,0x24],edit:[{lp:'Max ammo',le:'Max ammo',k:'v',byte:0,min:1,max:255,def:36}]},
+  {id:'shotgun_clip',cat:'armas',n:{pt:'Shotgun — Clip',en:'Shotgun — Clip'},d:{pt:'Shells por câmara. Padrão: 8.',en:'Shells per load. Default: 8.'},offset:0x000E3FE4,orig:[0x06,0x00,0x06,0x24],edit:[{lp:'Clip',le:'Clip',k:'v',byte:0,min:1,max:255,def:6}]},
+  {id:'shotgun_ammo',cat:'armas',n:{pt:'Shotgun — Max ammo',en:'Shotgun — Max ammo'},d:{pt:'Máximo de buckshot. Padrão: 125.',en:'Max buckshot. Default: 125.'},offset:0x000E3FDC,orig:[0x1E,0x00,0x08,0x24],edit:[{lp:'Max ammo',le:'Max ammo',k:'v',byte:0,min:1,max:255,def:30}]},
+  {id:'xbow_clip',cat:'armas',n:{pt:'Crossbow — Clip',en:'Crossbow — Clip'},d:{pt:'Bolts por carga. Padrão: 5.',en:'Bolts per load. Default: 5.'},offset:0x000563C4,orig:[0x01,0x00,0x07,0x24],edit:[{lp:'Clip',le:'Clip',k:'v',byte:0,min:1,max:255,def:1}]},
+  {id:'xbow_ammo',cat:'armas',n:{pt:'Crossbow — Max ammo',en:'Crossbow — Max ammo'},d:{pt:'Máximo de bolts. Padrão: 50.',en:'Max bolts. Default: 50.'},offset:0x000563B8,orig:[0x0A,0x00,0x08,0x24],edit:[{lp:'Max ammo',le:'Max ammo',k:'v',byte:0,min:1,max:255,def:10}]},
+  {id:'rpg_clip',cat:'armas',n:{pt:'RPG — Clip',en:'RPG — Clip'},d:{pt:'Foguetes por carga. Padrão: 1.',en:'Rockets per load. Default: 1.'},offset:0x000D9D74,orig:[0x01,0x00,0x07,0x24],edit:[{lp:'Clip',le:'Clip',k:'v',byte:0,min:1,max:255,def:1}]},
+  {id:'rpg_ammo',cat:'armas',n:{pt:'RPG — Max ammo',en:'RPG — Max ammo'},d:{pt:'Máximo de foguetes. Padrão: 5.',en:'Max rockets. Default: 5.'},offset:0x000D9D64,orig:[0x05,0x00,0x08,0x24],edit:[{lp:'Max ammo',le:'Max ammo',k:'v',byte:0,min:1,max:255,def:5}]},
+  {id:'gauss_ammo',cat:'armas',n:{pt:'Gauss/Egon — Cells',en:'Gauss/Egon — Cells'},d:{pt:'Cells de energia compartilhadas. Padrão: 160.',en:'Shared energy cells. Default: 160.'},offset:0x0001738C,orig:[0xA0,0x00,0x08,0x24],edit:[{lp:'Max cells',le:'Max cells',k:'v',byte:0,min:1,max:255,def:160}]},
+  // FIRE RATE
+  {id:'fr_glock',cat:'firerate',n:{pt:'Fire Rate — Glock',en:'Fire Rate — Glock'},d:{pt:'Delay entre tiros da Glock (s). Padrão: 0.10.',en:'Glock fire delay (s). Default: 0.10.'},offset:0x0003A618,orig:[0xCD,0xCC,0xCC,0x3D],float:true,edit:[{lp:'Segundos',le:'Seconds',k:'v',min:0.05,max:2,step:0.05,def:0.1}]},
+  {id:'fr_mp5',cat:'firerate',n:{pt:'Fire Rate — MP5',en:'Fire Rate — MP5'},d:{pt:'Delay entre tiros do MP5 (s). Padrão: 0.10.',en:'MP5 fire delay (s). Default: 0.10.'},offset:0x000236E8,orig:[0xCD,0xCC,0xCC,0x3D],float:true,edit:[{lp:'Segundos',le:'Seconds',k:'v',min:0.05,max:2,step:0.05,def:0.1}]},
+  {id:'fr_python',cat:'firerate',n:{pt:'Fire Rate — Python',en:'Fire Rate — Python'},d:{pt:'Delay entre tiros do Python (s). Padrão: 0.30.',en:'Python fire delay (s). Default: 0.30.'},offset:0x0006DEB0,orig:[0x9A,0x99,0x99,0x3E],float:true,edit:[{lp:'Segundos',le:'Seconds',k:'v',min:0.05,max:2,step:0.05,def:0.3}]},
+  {id:'fr_xbow',cat:'firerate',n:{pt:'Fire Rate — Crossbow',en:'Fire Rate — Crossbow'},d:{pt:'Delay entre tiros da Crossbow (s). Padrão: 0.10.',en:'Crossbow fire delay (s). Default: 0.10.'},offset:0x000572A8,orig:[0xCD,0xCC,0xCC,0x3D],float:true,edit:[{lp:'Segundos',le:'Seconds',k:'v',min:0.05,max:2,step:0.05,def:0.1}]},
+  {id:'fr_shotgun',cat:'firerate',n:{pt:'Fire Rate — Shotgun',en:'Fire Rate — Shotgun'},d:{pt:'Delay entre tiros da Shotgun (s). Padrão: 0.30.',en:'Shotgun fire delay (s). Default: 0.30.'},offset:0x0009EA90,orig:[0x9A,0x99,0x99,0x3E],float:true,edit:[{lp:'Segundos',le:'Seconds',k:'v',min:0.05,max:2,step:0.05,def:0.3}]},
+  {id:'fr_rpg',cat:'firerate',n:{pt:'Fire Rate — RPG',en:'Fire Rate — RPG'},d:{pt:'Delay entre tiros do RPG (s). Padrão: 0.40.',en:'RPG fire delay (s). Default: 0.40.'},offset:0x000C958C,orig:[0xCD,0xCC,0xCC,0x3E],float:true,edit:[{lp:'Segundos',le:'Seconds',k:'v',min:0.05,max:2,step:0.05,def:0.4}]},
+  {id:'fr_egon',cat:'firerate',n:{pt:'Fire Rate — Egon',en:'Fire Rate — Egon'},d:{pt:'Delay do loop de dano do Egon (s). Padrão: 0.60.',en:'Egon damage loop delay (s). Default: 0.60.'},offset:0x00064928,orig:[0x9A,0x99,0x19,0x3F],float:true,edit:[{lp:'Segundos',le:'Seconds',k:'v',min:0.05,max:2,step:0.05,def:0.6}]},
+  {id:'fr_gauss',cat:'firerate',n:{pt:'Fire Rate — Gauss',en:'Fire Rate — Gauss'},d:{pt:'Delay de carga do Gauss (s). Padrão: 0.15.',en:'Gauss charge delay (s). Default: 0.15.'},offset:0x00075684,orig:[0x9A,0x99,0x19,0x3E],float:true,edit:[{lp:'Segundos',le:'Seconds',k:'v',min:0.05,max:2,step:0.05,def:0.15}]},
+  // RELOAD
+  {id:'rl_glock',cat:'reload',n:{pt:'Reload — Glock',en:'Reload — Glock'},d:{pt:'Tempo de recarga da Glock (s). Padrão: 1.5.',en:'Glock reload time (s). Default: 1.5.'},offset:0x00038174,orig:[0xC0,0x3F,0x01,0x3C],lui:true,edit:[{lp:'Segundos',le:'Seconds',k:'v',min:0.5,max:8,step:0.5,def:1.5}]},
+  {id:'rl_mp5',cat:'reload',n:{pt:'Reload — MP5',en:'Reload — MP5'},d:{pt:'Tempo de recarga do MP5 (s). Padrão: 1.5.',en:'MP5 reload time (s). Default: 1.5.'},offset:0x000292D0,orig:[0xC0,0x3F,0x01,0x3C],lui:true,edit:[{lp:'Segundos',le:'Seconds',k:'v',min:0.5,max:8,step:0.5,def:1.5}]},
+  {id:'rl_python',cat:'reload',n:{pt:'Reload — Python',en:'Reload — Python'},d:{pt:'Tempo de recarga do Python (s). Padrão: 4.0.',en:'Python reload time (s). Default: 4.0.'},offset:0x00071DDC,orig:[0x80,0x40,0x01,0x3C],lui:true,edit:[{lp:'Segundos',le:'Seconds',k:'v',min:0.5,max:8,step:0.5,def:4.0}]},
+  {id:'rl_shotgun',cat:'reload',n:{pt:'Reload — Shotgun',en:'Reload — Shotgun'},d:{pt:'Tempo de bombeamento da Shotgun (s). Padrão: 2.0.',en:'Shotgun pump reload time (s). Default: 2.0.'},offset:0x0009E930,orig:[0x00,0x40,0x01,0x3C],lui:true,edit:[{lp:'Segundos',le:'Seconds',k:'v',min:0.5,max:8,step:0.5,def:2.0}]},
+  {id:'rl_xbow',cat:'reload',n:{pt:'Reload — Crossbow',en:'Reload — Crossbow'},d:{pt:'Tempo de recarga da Crossbow (s). Padrão: 4.5.',en:'Crossbow reload time (s). Default: 4.5.'},offset:0x0005731C,orig:[0x90,0x40,0x01,0x3C],lui:true,edit:[{lp:'Segundos',le:'Seconds',k:'v',min:0.5,max:8,step:0.5,def:4.5}]},
+  {id:'rl_rpg',cat:'reload',n:{pt:'Reload — RPG',en:'Reload — RPG'},d:{pt:'Tempo de recarga do RPG (s). Padrão: 3.5.',en:'RPG reload time (s). Default: 3.5.'},offset:0x000CAC00,orig:[0x60,0x40,0x01,0x3C],lui:true,edit:[{lp:'Segundos',le:'Seconds',k:'v',min:0.5,max:8,step:0.5,def:3.5}]},
+  {id:'rl_gauss',cat:'reload',n:{pt:'Reload — Gauss',en:'Reload — Gauss'},d:{pt:'Tempo de spin-up do Gauss (s). Padrão: 4.0.',en:'Gauss spin-up time (s). Default: 4.0.'},offset:0x000752DC,orig:[0x80,0x40,0x01,0x3C],lui:true,edit:[{lp:'Segundos',le:'Seconds',k:'v',min:0.5,max:8,step:0.5,def:4.0}]},
+  {id:'rl_egon',cat:'reload',n:{pt:'Reload — Egon',en:'Reload — Egon'},d:{pt:'Tempo de deploy do Egon (s). Padrão: 1.5.',en:'Egon deploy time (s). Default: 1.5.'},offset:0x000647D8,orig:[0xC0,0x3F,0x01,0x3C],lui:true,edit:[{lp:'Segundos',le:'Seconds',k:'v',min:0.5,max:8,step:0.5,def:1.5}]},
+  // GAMEPLAY
+  {id:'fov',     cat:'gameplay',n:{pt:'Campo de Visão (FOV)',en:'Field of View (FOV)'},
+   d:{pt:'FOV padrão do jogo. Padrão: 90°. Valores maiores = mais periférico.',en:'Default field of view. Default: 90°. Higher = wider.'},
+   offset:0x0001b008,orig:[0x5A,0x00,0x02,0x24],edit:[{lp:'FOV (graus)',le:'FOV (degrees)',k:'v',byte:0,min:60,max:170,def:90}]},
+  {id:'hlth',    cat:'gameplay',n:{pt:'Saúde inicial do jogador',en:'Player starting health'},
+   d:{pt:'Saúde com que Gordon começa cada mapa. Padrão: 100.',en:'Health Gordon starts each map with. Default: 100.'},
+   offset:0x000198d8,orig:[0x64,0x00,0x02,0x24],edit:[{lp:'Saúde (1–255)',le:'Health (1–255)',k:'v',byte:0,min:1,max:255,def:100}]},
+  {id:'gibs',    cat:'gameplay',n:{pt:'Gibs humanos',en:'Human gibs'},
+   d:{pt:'Ativa/desativa pedaços de corpo ao matar humanos (1=on, 0=off).',en:'Toggle human body gibs on kill (1=on, 0=off).'},
+   offset:0x0004a804,orig:[0x01,0x00,0x11,0x24],edit:[{lp:'On/Off',le:'On/Off',k:'v',byte:0,min:0,max:1,def:1}]},
+  {id:'hblood',  cat:'gameplay',n:{pt:'Sangue humano',en:'Human blood'},
+   d:{pt:'Ativa/desativa sangue de inimigos humanos (1=on, 0=off).',en:'Toggle human enemy blood (1=on, 0=off).'},
+   offset:0x00109588,orig:[0x01,0x00,0x02,0x24],edit:[{lp:'On/Off',le:'On/Off',k:'v',byte:0,min:0,max:1,def:1}]},
+  {id:'ablood',  cat:'gameplay',n:{pt:'Sangue alienígena',en:'Alien blood'},
+   d:{pt:'Ativa/desativa sangue/fluido de inimigos alienígenas (1=on, 0=off).',en:'Toggle alien fluid/blood (1=on, 0=off).'},
+   offset:0x001095b0,orig:[0x01,0x00,0x02,0x24],edit:[{lp:'On/Off',le:'On/Off',k:'v',byte:0,min:0,max:1,def:1}]},
+  {id:'bodyq',   cat:'gameplay',n:{pt:'Fila de cadáveres',en:'Corpse queue'},
+   d:{pt:'Máximo de cadáveres simultâneos na cena. Padrão: 2.',en:'Maximum simultaneous corpses in the scene. Default: 2.'},
+   offset:0x0008d0e4,orig:[0x02,0x00,0x12,0x24],edit:[{lp:'Cadáveres (1–10)',le:'Corpses (1–10)',k:'v',byte:0,min:1,max:10,def:2}]},
+  {id:'allowm',  cat:'gameplay',n:{pt:'Monstros em Multiplayer',en:'Monsters in Multiplayer'},
+   d:{pt:'Permite monstros em modo multiplayer/coop (1=sim, 0=não).',en:'Allow monsters in multiplayer/coop mode (1=yes, 0=no).'},
+   offset:0x00053edc,orig:[0x01,0x00,0x02,0x24],edit:[{lp:'On/Off',le:'On/Off',k:'v',byte:0,min:0,max:1,def:1}]},
 
-  // CHudGeiger — Y de cada barra de nível de radiação
-  { id:'gei_y1',   cat:'hudpos', name:'Geiger — Y nível 1',    desc:'Y da barra de nível 1 do Geiger. Padrão: 28.',  offset:0x000195E4, orig:[0x1C,0x00,0x06,0x24], edit:[{label:'Y (px)',key:'v',byte:0,min:0,max:447,def:28}] },
-  { id:'gei_y2',   cat:'hudpos', name:'Geiger — Y nível 2',    desc:'Y da barra de nível 2 do Geiger. Padrão: 40.',  offset:0x0001961C, orig:[0x28,0x00,0x06,0x24], edit:[{label:'Y (px)',key:'v',byte:0,min:0,max:447,def:40}] },
-  { id:'gei_y3',   cat:'hudpos', name:'Geiger — Y nível 3',    desc:'Y da barra de nível 3 do Geiger. Padrão: 60.',  offset:0x00019654, orig:[0x3C,0x00,0x06,0x24], edit:[{label:'Y (px)',key:'v',byte:0,min:0,max:447,def:60}] },
-  { id:'gei_y4',   cat:'hudpos', name:'Geiger — Y nível 4',    desc:'Y da barra de nível 4 do Geiger. Padrão: 80.',  offset:0x0001968C, orig:[0x50,0x00,0x06,0x24], edit:[{label:'Y (px)',key:'v',byte:0,min:0,max:447,def:80}] },
-  { id:'gei_y5',   cat:'hudpos', name:'Geiger — Y nível 5',    desc:'Y da barra de nível 5 do Geiger. Padrão: 90.',  offset:0x000196B8, orig:[0x5A,0x00,0x06,0x24], edit:[{label:'Y (px)',key:'v',byte:0,min:0,max:447,def:90}] },
-  { id:'gei_y6',   cat:'hudpos', name:'Geiger — Y nível 6',    desc:'Y da barra de nível 6 do Geiger (máximo). Padrão: 95.', offset:0x000196DC, orig:[0x5F,0x00,0x06,0x24], edit:[{label:'Y (px)',key:'v',byte:0,min:0,max:447,def:95}] },
+  // SNARK
+  {id:'snk_ammo',cat:'snark',n:{pt:'Snark — Max ammo',en:'Snark — Max ammo'},d:{pt:'Máximo de Snarks carregáveis. Padrão: 15.',en:'Max Snarks carried. Default: 15.'},offset:0x000EE9F0,orig:[0xFF,0x00,0x08,0x24],edit:[{lp:'Max ammo',le:'Max ammo',k:'v',byte:0,min:1,max:255,def:255}]},
+  {id:'snk_nop1',cat:'snark',n:{pt:'Snark — NOP consumo A',en:'Snark — NOP consume A'},d:{pt:'NOPa o 1º decremento de ammo. Ativar junto com B = ammo infinita.',en:'NOPs 1st ammo decrement. Enable with B for infinite ammo.'},offset:0x000EF640,orig:[0xFF,0xFF,0x52,0x26],nop:true},
+  {id:'snk_nop2',cat:'snark',n:{pt:'Snark — NOP consumo B',en:'Snark — NOP consume B'},d:{pt:'NOPa o 2º decremento de ammo.',en:'NOPs 2nd ammo decrement.'},offset:0x000EF6A4,orig:[0xFF,0xFF,0x52,0x26],nop:true},
+  {id:'snk_life',cat:'snark',n:{pt:'Snark — Lifetime',en:'Snark — Lifetime'},d:{pt:'Segundos antes de explodir. 32767 ≈ infinito. Padrão PS2: 30s.',en:'Seconds before exploding. 32767 ≈ infinite. PS2 default: 30s.'},offset:0x000EF6C4,orig:[0xFF,0x7F,0x12,0x24],edit:[{lp:'Segundos',le:'Seconds',k:'v',byte16:true,min:1,max:32767,def:32767}]},
+  // ── REDE / CONNECT ──
+  {id:'net_init',cat:'rede',n:{pt:'Connect — bypass verificação de rede',en:'Connect — bypass network init check'},
+   d:{pt:'Remove a verificação de rede inicializada no comando connect. Permite usar connect sem DEV9 configurado no PCSX2.',
+      en:'Removes the network init check in the connect command. Allows using connect without DEV9 configured in PCSX2.'},
+   offset:0x0017D8C4,orig:[0x25,0x00,0x40,0x14],patch:[0x25,0x00,0x00,0x10]},
+  {id:'net_auth',cat:'rede',n:{pt:'Connect — bypass estado WON auth',en:'Connect — bypass WON auth state'},
+   d:{pt:'Remove a verificação do estado de autenticação WON (servidores WON desligados desde 2004).',
+      en:'Removes the WON authentication state check (WON servers shut down since 2004).'},
+   offset:0x0017D960,orig:[0x09,0x00,0x40,0x14],patch:[0x00,0x00,0x00,0x00]},
+  {id:'net_won',cat:'rede',n:{pt:'Connect — bypass tipo WON (val=3)',en:'Connect — bypass WON type check (val=3)'},
+   d:{pt:'Remove a verificação do tipo de autenticação WON. Com os 3 patches ativos o connect funciona diretamente.',
+      en:'Removes the WON auth type check. With all 3 patches active, connect works directly.'},
+   offset:0x0017D990,orig:[0x16,0x00,0x62,0x14],patch:[0x00,0x00,0x00,0x00]},
 
-  // CHudTrain
-  { id:'trn_x',    cat:'hudpos', name:'Train HUD — X',         desc:'Posição X do HUD do trem. Padrão: 96.',          offset:0x00021098, orig:[0x60,0x00,0x07,0x24], edit:[{label:'X (px)',key:'v',byte:0,min:0,max:639,def:96}] },
-  { id:'trn_y',    cat:'hudpos', name:'Train HUD — Y',         desc:'Posição Y do HUD do trem. Padrão: 128.',         offset:0x000210A8, orig:[0x80,0x00,0x08,0x24], edit:[{label:'Y (px)',key:'v',byte:0,min:0,max:447,def:128}] },
-  { id:'trn_mg',   cat:'hudpos', name:'Train HUD — margem',    desc:'Margem interna do HUD do trem. Padrão: 16.',     offset:0x000210A0, orig:[0x10,0x00,0x06,0x24], edit:[{label:'Margem (px)',key:'v',byte:0,min:0,max:64,def:16}] },
-
-  // CHudHistoryResource (histórico de itens coletados)
-  { id:'hist_x',   cat:'hudpos', name:'ItemHistory — offset X',desc:'Offset X da direita para o histórico de itens coletados. Padrão: 144 (= 640−144=496 da esquerda).', offset:0x00012914, orig:[0x90,0x00,0x08,0x24], edit:[{label:'Offset X (px)',key:'v',byte:0,min:0,max:639,def:144}] },
-  { id:'hist_y',   cat:'hudpos', name:'ItemHistory — Y inicial',desc:'Posição Y de início do histórico de itens. Padrão: 128.',                                          offset:0x00012998, orig:[0x80,0x00,0x08,0x24], edit:[{label:'Y (px)',key:'v',byte:0,min:0,max:447,def:128}] },
-  { id:'hist_yl',  cat:'hudpos', name:'ItemHistory — Y limite', desc:'Posição Y máxima do histórico de itens antes de cortar. Padrão: 200.',                             offset:0x000129A0, orig:[0xC8,0x00,0x08,0x24], edit:[{label:'Y limite (px)',key:'v',byte:0,min:0,max:447,def:200}] },
-
-  // ISlaveHud (PS2 exclusivo — Alien Slave)
-  { id:'isl_mx',   cat:'hudpos', name:'ISlaveHud — margem X',  desc:'Margem X do HUD do Alien Slave (PS2 exclusivo). Padrão: 12.',                                      offset:0x00021C80, orig:[0x0C,0x00,0x07,0x24], edit:[{label:'Margem X (px)',key:'v',byte:0,min:0,max:64,def:12}] },
-  { id:'isl_sc',   cat:'hudpos', name:'ISlaveHud — escala',    desc:'Escala do HUD do Alien Slave (%). Padrão: 100.',                                                    offset:0x00021D5C, orig:[0x64,0x00,0x06,0x24], edit:[{label:'Escala (%)',key:'v',byte:0,min:10,max:200,def:100}] },
-
-  // ── ARMAS — AMMO / CLIP ──
-  { id:'glock_clip',   cat:'armas', name:'Glock — clip',       desc:'Balas por pente da Glock 17. Padrão: 17.',       offset:0x0007AF44, orig:[0x12,0x00,0x07,0x24], edit:[{label:'Clip',key:'v',byte:0,min:1,max:255,def:18}] },
-  { id:'glock_ammo',   cat:'armas', name:'Glock — max ammo',   desc:'Máximo de munição 9mm. Padrão: 250.',            offset:0x0007AF34, orig:[0x97,0x00,0x08,0x24], edit:[{label:'Max ammo',key:'v',byte:0,min:1,max:255,def:151}] },
-  { id:'mp5_clip',     cat:'armas', name:'MP5 — clip',         desc:'Balas por pente do MP5. Padrão: 50.',            offset:0x000AAF94, orig:[0x32,0x00,0x06,0x24], edit:[{label:'Clip',key:'v',byte:0,min:1,max:255,def:50}] },
-  { id:'mp5_ammo',     cat:'armas', name:'MP5 — max ammo',     desc:'Máximo de munição 9mm para MP5. Padrão: 250.',   offset:0x000AAF90, orig:[0xFA,0x00,0x08,0x24], edit:[{label:'Max ammo',key:'v',byte:0,min:1,max:255,def:250}] },
-  { id:'python_clip',  cat:'armas', name:'Python — clip',      desc:'Balas por cilindro do Python .357. Padrão: 6.',  offset:0x000D483C, orig:[0x06,0x00,0x07,0x24], edit:[{label:'Clip',key:'v',byte:0,min:1,max:255,def:6}] },
-  { id:'python_ammo',  cat:'armas', name:'Python — max ammo',  desc:'Máximo de munição .357. Padrão: 36.',            offset:0x000D4840, orig:[0x24,0x00,0x08,0x24], edit:[{label:'Max ammo',key:'v',byte:0,min:1,max:255,def:36}] },
-  { id:'shotgun_clip', cat:'armas', name:'Shotgun — clip',     desc:'Shells por câmara. Padrão: 8.',                  offset:0x000E3FE4, orig:[0x06,0x00,0x06,0x24], edit:[{label:'Clip',key:'v',byte:0,min:1,max:255,def:6}] },
-  { id:'shotgun_ammo', cat:'armas', name:'Shotgun — max ammo', desc:'Máximo de buckshot. Padrão: 125.',               offset:0x000E3FDC, orig:[0x1E,0x00,0x08,0x24], edit:[{label:'Max ammo',key:'v',byte:0,min:1,max:255,def:30}] },
-  { id:'xbow_clip',    cat:'armas', name:'Crossbow — clip',    desc:'Bolts por carga. Padrão: 5.',                    offset:0x000563C4, orig:[0x01,0x00,0x07,0x24], edit:[{label:'Clip',key:'v',byte:0,min:1,max:255,def:1}] },
-  { id:'xbow_ammo',    cat:'armas', name:'Crossbow — max ammo',desc:'Máximo de bolts. Padrão: 50.',                   offset:0x000563B8, orig:[0x0A,0x00,0x08,0x24], edit:[{label:'Max ammo',key:'v',byte:0,min:1,max:255,def:10}] },
-  { id:'rpg_clip',     cat:'armas', name:'RPG — clip',         desc:'Foguetes por carga. Padrão: 1.',                 offset:0x000D9D74, orig:[0x01,0x00,0x07,0x24], edit:[{label:'Clip',key:'v',byte:0,min:1,max:255,def:1}] },
-  { id:'rpg_ammo',     cat:'armas', name:'RPG — max ammo',     desc:'Máximo de foguetes. Padrão: 5.',                 offset:0x000D9D64, orig:[0x05,0x00,0x08,0x24], edit:[{label:'Max ammo',key:'v',byte:0,min:1,max:255,def:5}] },
-  { id:'gauss_ammo',   cat:'armas', name:'Gauss/Egon — cells', desc:'Máximo de energy cells (compartilhado). Padrão: 160.',offset:0x0001738C, orig:[0xA0,0x00,0x08,0x24], edit:[{label:'Max cells',key:'v',byte:0,min:1,max:255,def:160}] },
-
-  // ── FIRE RATE ──
-  { id:'fr_glock',   cat:'firerate', name:'Fire rate — Glock',    desc:'Delay entre tiros da Glock (s). Padrão: 0.10.',   offset:0x0003A618, orig:[0xCD,0xCC,0xCC,0x3D], float:true, edit:[{label:'Segundos',key:'v',min:0.05,max:2,step:0.05,def:0.1}] },
-  { id:'fr_mp5',     cat:'firerate', name:'Fire rate — MP5',      desc:'Delay entre tiros primários do MP5 (s). Padrão: 0.10.', offset:0x000236E8, orig:[0xCD,0xCC,0xCC,0x3D], float:true, edit:[{label:'Segundos',key:'v',min:0.05,max:2,step:0.05,def:0.1}] },
-  { id:'fr_python',  cat:'firerate', name:'Fire rate — Python',   desc:'Delay entre tiros do Python (s). Padrão: 0.30.',  offset:0x0006DEB0, orig:[0x9A,0x99,0x99,0x3E], float:true, edit:[{label:'Segundos',key:'v',min:0.05,max:2,step:0.05,def:0.3}] },
-  { id:'fr_xbow',    cat:'firerate', name:'Fire rate — Crossbow', desc:'Delay entre tiros da Crossbow (s). Padrão: 0.10.',offset:0x000572A8, orig:[0xCD,0xCC,0xCC,0x3D], float:true, edit:[{label:'Segundos',key:'v',min:0.05,max:2,step:0.05,def:0.1}] },
-  { id:'fr_shotgun', cat:'firerate', name:'Fire rate — Shotgun',  desc:'Delay entre tiros da Shotgun (s). Padrão: 0.30.', offset:0x0009EA90, orig:[0x9A,0x99,0x99,0x3E], float:true, edit:[{label:'Segundos',key:'v',min:0.05,max:2,step:0.05,def:0.3}] },
-  { id:'fr_rpg',     cat:'firerate', name:'Fire rate — RPG',      desc:'Delay entre tiros do RPG (s). Padrão: 0.40.',     offset:0x000C958C, orig:[0xCD,0xCC,0xCC,0x3E], float:true, edit:[{label:'Segundos',key:'v',min:0.05,max:2,step:0.05,def:0.4}] },
-  { id:'fr_egon',    cat:'firerate', name:'Fire rate — Egon',     desc:'Delay do loop de fogo do Egon (s). Padrão: 0.60.',offset:0x00064928, orig:[0x9A,0x99,0x19,0x3F], float:true, edit:[{label:'Segundos',key:'v',min:0.05,max:2,step:0.05,def:0.6}] },
-  { id:'fr_gauss',   cat:'firerate', name:'Fire rate — Gauss',    desc:'Delay de carga do Gauss (s). Padrão: 0.15.',      offset:0x00075684, orig:[0x9A,0x99,0x19,0x3E], float:true, edit:[{label:'Segundos',key:'v',min:0.05,max:2,step:0.05,def:0.15}] },
-
-  // ── RELOAD TIME (LUI-based floats, bytes 0+1) ──
-  { id:'rl_glock',   cat:'reload', name:'Reload — Glock',    desc:'Tempo de recarga da Glock (s). Padrão: 1.5.',   offset:0x00038174, orig:[0xC0,0x3F,0x01,0x3C], lui:true, edit:[{label:'Segundos',key:'v',min:0.5,max:8,step:0.5,def:1.5}] },
-  { id:'rl_mp5',     cat:'reload', name:'Reload — MP5',      desc:'Tempo de recarga do MP5 (s). Padrão: 1.5.',    offset:0x000292D0, orig:[0xC0,0x3F,0x01,0x3C], lui:true, edit:[{label:'Segundos',key:'v',min:0.5,max:8,step:0.5,def:1.5}] },
-  { id:'rl_python',  cat:'reload', name:'Reload — Python',   desc:'Tempo de recarga do Python (s). Padrão: 4.0.', offset:0x00071DDC, orig:[0x80,0x40,0x01,0x3C], lui:true, edit:[{label:'Segundos',key:'v',min:0.5,max:8,step:0.5,def:4.0}] },
-  { id:'rl_shotgun', cat:'reload', name:'Reload — Shotgun',  desc:'Tempo de bombeamento/recarga da Shotgun (s). Padrão: 2.0.', offset:0x0009E930, orig:[0x00,0x40,0x01,0x3C], lui:true, edit:[{label:'Segundos',key:'v',min:0.5,max:8,step:0.5,def:2.0}] },
-  { id:'rl_xbow',    cat:'reload', name:'Reload — Crossbow', desc:'Tempo de recarga da Crossbow (s). Padrão: 4.5.',offset:0x0005731C, orig:[0x90,0x40,0x01,0x3C], lui:true, edit:[{label:'Segundos',key:'v',min:0.5,max:8,step:0.5,def:4.5}] },
-  { id:'rl_rpg',     cat:'reload', name:'Reload — RPG',      desc:'Tempo de recarga do RPG (s). Padrão: 3.5.',    offset:0x000CAC00, orig:[0x60,0x40,0x01,0x3C], lui:true, edit:[{label:'Segundos',key:'v',min:0.5,max:8,step:0.5,def:3.5}] },
-  { id:'rl_gauss',   cat:'reload', name:'Reload — Gauss',    desc:'Tempo de spin-up do Gauss (s). Padrão: 4.0.',  offset:0x000752DC, orig:[0x80,0x40,0x01,0x3C], lui:true, edit:[{label:'Segundos',key:'v',min:0.5,max:8,step:0.5,def:4.0}] },
-  { id:'rl_egon',    cat:'reload', name:'Reload — Egon',     desc:'Tempo de deploy do Egon (s). Padrão: 1.5.',    offset:0x000647D8, orig:[0xC0,0x3F,0x01,0x3C], lui:true, edit:[{label:'Segundos',key:'v',min:0.5,max:8,step:0.5,def:1.5}] },
-
-  // ── SNARK ──
-  { id:'snk_ammo',  cat:'snark', name:'Snark — max ammo',     desc:'Máximo de Snarks carregáveis. Padrão: 15.',       offset:0x000EE9F0, orig:[0xFF,0x00,0x08,0x24], edit:[{label:'Max ammo',key:'v',byte:0,min:1,max:255,def:255}] },
-  { id:'snk_nop1',  cat:'snark', name:'Snark — NOP consumo A', desc:'Elimina o primeiro decremento de ammo ao lançar. Ative junto com B para ammo infinita.',
-    offset:0x000EF640, orig:[0xFF,0xFF,0x52,0x26], nop:true },
-  { id:'snk_nop2',  cat:'snark', name:'Snark — NOP consumo B', desc:'Elimina o segundo decremento de ammo ao lançar.',
-    offset:0x000EF6A4, orig:[0xFF,0xFF,0x52,0x26], nop:true },
-  { id:'snk_life',  cat:'snark', name:'Snark — lifetime',      desc:'Tempo de vida antes de explodir (s). 32767 ≈ infinito. Padrão: 30.',
-    offset:0x000EF6C4, orig:[0xFF,0x7F,0x12,0x24], edit:[{label:'Segundos',key:'v',byte16:true,min:1,max:32767,def:32767}] },
-
-  // ── MEMÓRIA ──
-  { id:'mem_decals', cat:'memoria', name:'MAX_DECALS',    desc:'Máximo de marcas de tiro/explosão. Reduzir libera RAM em mapas grandes. Padrão: 512.',  offset:0x00163178, orig:[0x80,0x00,0x06,0x24], edit:[{label:'Limite',key:'v',byte16:true,min:32,max:512,def:128}] },
-  { id:'mem_tents',  cat:'memoria', name:'MAX_TEMP_ENTS', desc:'Máximo de efeitos temporários (partículas, sangue). Padrão: 350.',                       offset:0x0015C090, orig:[0x96,0x00,0x06,0x24], edit:[{label:'Limite',key:'v',byte16:true,min:50,max:512,def:150}] },
-  { id:'mem_edicts', cat:'memoria', name:'MAX_EDICTS',    desc:'Máximo de entidades simultâneas. Aumentar ajuda mapas grandes com muitos NPCs/triggers. Padrão: 676.', offset:0x00177BC8, orig:[0xA4,0x02,0x04,0x24], edit:[{label:'Limite',key:'v',byte16:true,min:256,max:1200,def:676}] },
+  // MEMORY
+  {id:'mem_decals',cat:'memoria',n:{pt:'MAX_DECALS',en:'MAX_DECALS'},d:{pt:'Máximo de marcas de tiro. Reduzir libera RAM. Padrão: 512.',en:'Max bullet marks. Reducing frees RAM. Default: 512.'},offset:0x00163178,orig:[0x80,0x00,0x06,0x24],edit:[{lp:'Limite',le:'Limit',k:'v',byte16:true,min:32,max:512,def:128}]},
+  {id:'mem_tents',cat:'memoria',n:{pt:'MAX_TEMP_ENTS',en:'MAX_TEMP_ENTS'},d:{pt:'Máximo de efeitos temporários. Padrão: 350.',en:'Max temporary effects. Default: 350.'},offset:0x0015C090,orig:[0x96,0x00,0x06,0x24],edit:[{lp:'Limite',le:'Limit',k:'v',byte16:true,min:50,max:512,def:150}]},
+  {id:'mem_edicts',cat:'memoria',n:{pt:'MAX_EDICTS',en:'MAX_EDICTS'},d:{pt:'Máximo de entidades simultâneas. Padrão: 676.',en:'Max simultaneous entities. Default: 676.'},offset:0x00177BC8,orig:[0xA4,0x02,0x04,0x24],edit:[{lp:'Limite',le:'Limit',k:'v',byte16:true,min:256,max:1200,def:676}]},
 ];
 
-// ── ESTADO ──
-let fileBytes = null;
-const state = {};
-PATCHES.forEach(p => { state[p.id] = { on: false, val: p.edit ? p.edit[0].def : null, open: false }; });
+// ════════════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════════════
+let lang='pt', fileBytes=null, fileName='SLUS_200_66.ELF', currentCat='all';
+const pstate={};
+PATCHES.forEach(p=>{pstate[p.id]={on:false,val:p.edit?p.edit[0].def:null,open:false}});
+const infoOpen={};
+const L=()=>I18N[lang];
+const t=k=>L()[k]||k;
 
-// ── CONVERSÕES ──
-function floatToLE(v) {
-  const b = new ArrayBuffer(4); new DataView(b).setFloat32(0, v, true); return [...new Uint8Array(b)];
-}
-function leToFloat(bytes) {
-  const b = new ArrayBuffer(4); new Uint8Array(b).set(bytes.slice(0,4)); return new DataView(b).getFloat32(0, true);
-}
-function floatToLUI(v) {
-  // Retorna os 4 bytes de uma instrução LUI com o hi16 do float v
-  const bits = new DataView(new ArrayBuffer(4));
-  bits.setFloat32(0, v, false); // big-endian
-  const hi16 = bits.getUint16(0); // top 16 bits
-  // LUI $at, hi16 = 0x3C010000 | hi16
-  const instr = 0x3C010000 | hi16;
-  const out = new ArrayBuffer(4);
-  new DataView(out).setUint32(0, instr, true); // little-endian
-  return [...new Uint8Array(out)];
-}
-function le16(v) { return [v & 0xFF, (v >> 8) & 0xFF]; }
-function le16s(v) { const u = v < 0 ? v + 65536 : v; return [u & 0xFF, (u >> 8) & 0xFF]; }
-function le16val(b) { const v = b[0] | (b[1] << 8); return v >= 0x8000 ? v - 0x10000 : v; }
-function le16uval(b) { return b[0] | (b[1] << 8); }
+// ════════════════════════════════════════════════════════
+// CONVERSIONS
+// ════════════════════════════════════════════════════════
+const f2le=v=>{const b=new ArrayBuffer(4);new DataView(b).setFloat32(0,v,true);return[...new Uint8Array(b)]};
+const le2f=b=>{const buf=new ArrayBuffer(4);new Uint8Array(buf).set(b.slice(0,4));return new DataView(buf).getFloat32(0,true)};
+const f2lui=v=>{const dv=new DataView(new ArrayBuffer(4));dv.setFloat32(0,v,false);const hi=dv.getUint16(0);const ins=0x3C010000|hi;const o=new ArrayBuffer(4);new DataView(o).setUint32(0,ins,true);return[...new Uint8Array(o)]};
+const le16=v=>[v&0xFF,(v>>8)&0xFF];
+const le16s=v=>{const u=v<0?v+65536:v;return[u&0xFF,(u>>8)&0xFF]};
+const le16u=b=>b[0]|(b[1]<<8);
+const le16sv=b=>{const v=le16u(b);return v>=0x8000?v-0x10000:v};
 
-function getPatchBytes(p) {
-  const s = state[p.id];
-  if (p.nop) return [0x00, 0x00, 0x00, 0x00];
-  const e = p.edit[0], val = parseFloat(s.val);
-  const out = [...p.orig];
-  if (p.float) return floatToLE(isNaN(val) ? leToFloat(p.orig) : val);
-  if (p.lui)   return floatToLUI(isNaN(val) ? 1.0 : val);
-  if (e.byte16)  { const v = isNaN(val)?le16uval(p.orig):Math.max(e.min,Math.min(e.max,val)); const [a,b] = le16(v); out[0]=a; out[1]=b; return out; }
-  if (e.byte16s) { const v = isNaN(val)?le16val(p.orig):Math.max(e.min,Math.min(e.max,val));  const [a,b] = le16s(v); out[0]=a; out[1]=b; return out; }
-  if (e.byte !== undefined) { const v = isNaN(val)?p.orig[e.byte]:Math.max(e.min,Math.min(e.max,Math.round(val))); out[e.byte] = v & 0xFF; return out; }
-  return out;
+function patchBytes(p){
+  const s=pstate[p.id];
+  if(p.nop)return[0,0,0,0];
+  if(p.patch)return[...p.patch];  // fixed patch bytes (rede/bypass patches)
+  const e=p.edit[0],v=parseFloat(s.val),o=[...p.orig];
+  if(p.float)return f2le(isNaN(v)?le2f(p.orig):v);
+  if(p.lui)return f2lui(isNaN(v)?1:v);
+  if(e.byte16){const n=isNaN(v)?le16u(p.orig):Math.round(Math.max(e.min,Math.min(e.max,v)));const[a,b]=le16(n);o[0]=a;o[1]=b;return o}
+  if(e.byte16s){const n=isNaN(v)?le16sv(p.orig):Math.round(Math.max(e.min,Math.min(e.max,v)));const[a,b]=le16s(n);o[0]=a;o[1]=b;return o}
+  if(e.byte!==undefined){o[e.byte]=Math.round(Math.max(e.min,Math.min(e.max,isNaN(v)?p.orig[e.byte]:v)))&0xFF;return o}
+  return o;
 }
 
-// ── RENDER ──
-function hexb(b) { return b.toString(16).toUpperCase().padStart(2,'0'); }
+// ════════════════════════════════════════════════════════
+// SIDEBAR
+// ════════════════════════════════════════════════════════
+const CATS=['all','hud','hudpos','armas','firerate','reload','gameplay','snark','rede','memoria'];
 
-function renderPatch(p) {
-  const s = state[p.id];
-  const patched = s.on ? getPatchBytes(p) : [...p.orig];
-  const changed = s.on && patched.some((b,i) => b !== p.orig[i]);
-
-  let bytesHtml = patched.map((b,i) =>
-    `<span class="byte-box ${changed && b !== p.orig[i] ? 'changed' : ''}">${hexb(b)}</span>`
-  ).join('');
-
-  let fieldsHtml = '';
-  if (!p.nop && p.edit) {
-    const e = p.edit[0];
-    const step = e.step || 1;
-    fieldsHtml = `
-      <div class="field-row">
-        <span class="field-label">${e.label}</span>
-        <input class="field-input" type="number" min="${e.min}" max="${e.max}" step="${step}"
-               value="${s.val}" data-pid="${p.id}">
-      </div>`;
-  }
-  if (p.nop) {
-    bytesHtml = `<span class="byte-box changed">00</span><span class="byte-box changed">00</span><span class="byte-box changed">00</span><span class="byte-box changed">00</span>`;
-  }
-
-  return `
-    <div class="patch-card ${s.on ? 'enabled' : ''}" data-pid="${p.id}">
-      <div class="patch-head" data-pid="${p.id}">
-        <span class="patch-name">${p.name}</span>
-        <span class="patch-offset">0x${p.offset.toString(16).toUpperCase().padStart(8,'0')}</span>
-        <button class="toggle ${s.on ? 'on' : ''}" data-pid="${p.id}" aria-label="toggle"></button>
-      </div>
-      <div class="patch-body ${s.open ? 'open' : ''}">
-        <div class="patch-desc">${p.desc}</div>
-        ${fieldsHtml}
-        <div class="bytes-row">
-          <span class="bytes-label">bytes:</span>
-          ${bytesHtml}
-        </div>
-      </div>
-    </div>`;
-}
-
-const CAT_LABELS = {
-  all:'Todos os patches', hud:'HUD — Cor', hudpos:'HUD — Posição', armas:'Armas — Ammo',
-  firerate:'Fire Rate', reload:'Reload Time', snark:'Snark', memoria:'Memória'
-};
-
-function renderAll(filterCat) {
-  const cats = filterCat === 'all'
-    ? [...new Set(PATCHES.map(p => p.cat))]
-    : [filterCat];
-
-  let html = '';
-  cats.forEach(cat => {
-    const ps = PATCHES.filter(p => p.cat === cat);
-    html += `<div class="cat-section visible">
-      <div class="section-header">
-        <span class="section-title">${CAT_LABELS[cat]||cat}</span>
-        <span class="section-sub">${ps.length} patches</span>
-      </div>
-      <div class="patch-grid">${ps.map(renderPatch).join('')}</div>
+function renderSidebar(){
+  const totalOn=PATCHES.filter(p=>pstate[p.id].on).length;
+  let html=`<div class="sb-top">
+  <div class="sb-section">${lang==='pt'?'Navegação':'Navigation'}</div>
+  <div class="sb-item${currentCat==='all'?' active':''}" data-cat="all">
+    <span class="sb-icon">◈</span>
+    <span class="sb-label">${t('cat_all')}</span>
+    <span class="sb-cnt">${totalOn}</span>
+  </div>
+  <div class="sb-divider"></div>
+  <div class="sb-section">${lang==='pt'?'Categorias':'Categories'}</div>`;
+  CATS.slice(1).forEach(c=>{
+    const on=PATCHES.filter(p=>p.cat===c&&pstate[p.id].on).length;
+    const total=PATCHES.filter(p=>p.cat===c).length;
+    html+=`<div class="sb-item${currentCat===c?' active':''}" data-cat="${c}">
+      <span class="sb-icon">${t('icon_'+c)}</span>
+      <span class="sb-label">${t('cat_'+c)}</span>
+      <span class="sb-cnt">${on}</span>
     </div>`;
   });
-  document.getElementById('patch-content').innerHTML = html;
+  html+=`</div><div class="sb-bottom">
+    <div class="sb-stat"><span>${lang==='pt'?'Total':'Total'}</span><span><b>${PATCHES.length}</b> patches</span></div>
+    <div class="sb-stat"><span>${lang==='pt'?'Ativos':'Active'}</span><b>${totalOn}</b></div>
+  </div>`;
+  document.getElementById('sidebar').innerHTML=html;
+  document.getElementById('sidebar').querySelectorAll('.sb-item').forEach(el=>{
+    el.addEventListener('click',()=>{currentCat=el.dataset.cat;renderAll()});
+  });
+  document.getElementById('patch-count-tag').textContent=`${totalOn}/${PATCHES.length} patches`;
+}
+
+// ════════════════════════════════════════════════════════
+// RENDER
+// ════════════════════════════════════════════════════════
+const hx=b=>b.toString(16).toUpperCase().padStart(2,'0');
+
+function renderCatInfo(cat){
+  const info=L()['info_'+cat];
+  if(!info)return'';
+  const open=!!infoOpen[cat];
+  const count=PATCHES.filter(p=>p.cat===cat).length;
+  const body=info.body.replace(/\n/g,'<br>').replace(/<b>/g,'<b>').replace(/<\/b>/g,'</b>').replace(/<code>/g,'<code>').replace(/<\/code>/g,'</code>');
+  return`<div class="cat-info">
+    <div class="cat-info-head" data-info="${cat}">
+      <span class="cih-icon">${t('icon_'+cat)}</span>
+      <div class="cih-left">
+        <div class="cih-title">${t('cat_'+cat)}</div>
+        <div class="cih-sub">${info.title}</div>
+      </div>
+      <span class="cih-badge">${count} ${t('patches_hdr')}</span>
+      <span class="cih-chevron${open?' open':''}">▶</span>
+    </div>
+    <div class="cat-info-body${open?' open':''}">
+      <div class="cib-inner">${body}</div>
+    </div>
+  </div>`;
+}
+
+function renderCard(p){
+  const s=pstate[p.id];
+  const name=p.n[lang]||p.n.pt;
+  const desc=p.d[lang]||p.d.pt;
+  const patched=s.on?patchBytes(p):[...p.orig];
+  const changed=s.on&&patched.some((b,i)=>b!==p.orig[i]);
+  const boxes=patched.map((b,i)=>`<span class="byte-b${changed&&b!==p.orig[i]?' ch':''}">${hx(b)}</span>`).join('');
+  let field='';
+  if(!p.nop&&!p.patch&&p.edit){
+    const e=p.edit[0];
+    const lbl=lang==='en'?(e.le||e.lp):e.lp;
+    field=`<div class="field-row">
+      <span class="field-label">${lbl}</span>
+      <input class="field-input" type="number" min="${e.min}" max="${e.max}" step="${e.step||1}" value="${s.val}" data-pid="${p.id}">
+    </div>`;
+  }
+  const patchNote=p.patch?`<div class="nop-info">→ <code>${p.patch.map(b=>b.toString(16).toUpperCase().padStart(2,'0')).join(' ')}</code></div>`:'';
+  const nopNote=p.nop?`<div class="nop-info">→ <code>00 00 00 00</code> (NOP MIPS)</div>`:'';
+  return`<div class="patch-card${s.on?' enabled':''}" data-pid="${p.id}">
+    <div class="patch-head" data-pid="${p.id}">
+      <span class="patch-name">${name}</span>
+      <span class="patch-off">0x${p.offset.toString(16).toUpperCase().padStart(8,'0')}</span>
+      <button class="toggle${s.on?' on':''}" data-pid="${p.id}" aria-label="toggle"></button>
+    </div>
+    <div class="patch-body${s.open?' open':''}">
+      <div class="patch-desc">${desc}</div>
+      ${field}${nopNote}${patchNote}
+      <div class="bytes-row"><span class="bytes-lbl">${t('bytes')}</span>${boxes}</div>
+    </div>
+  </div>`;
+}
+
+function renderAll(){
+  const cats=currentCat==='all'?[...new Set(PATCHES.map(p=>p.cat))]:[currentCat];
+  let html='';
+  cats.forEach(cat=>{
+    const ps=PATCHES.filter(p=>p.cat===cat);
+    html+=renderCatInfo(cat);
+    html+=`<div class="patch-grid">${ps.map(renderCard).join('')}</div>`;
+  });
+  document.getElementById('patch-content').innerHTML=html;
   attachEvents();
-  updateSummary();
+  renderSidebar();
+  updateUI();
 }
 
-function attachEvents() {
-  document.getElementById('patch-content').querySelectorAll('.patch-head').forEach(h => {
-    h.addEventListener('click', e => {
-      const toggle = e.target.closest('.toggle');
-      if (toggle) {
-        e.stopPropagation();
-        const pid = toggle.dataset.pid;
-        state[pid].on = !state[pid].on;
-        refreshPatch(pid);
-        updateSummary();
-        return;
-      }
-      const pid = h.dataset.pid;
-      state[pid].open = !state[pid].open;
-      const card = document.querySelector(`.patch-card[data-pid="${pid}"]`);
-      card.querySelector('.patch-body').classList.toggle('open');
+function attachEvents(){
+  const c=document.getElementById('patch-content');
+  c.querySelectorAll('.cat-info-head').forEach(h=>{
+    h.addEventListener('click',()=>{
+      const cat=h.dataset.info;
+      infoOpen[cat]=!infoOpen[cat];
+      h.nextElementSibling.classList.toggle('open',infoOpen[cat]);
+      h.querySelector('.cih-chevron').classList.toggle('open',infoOpen[cat]);
     });
   });
-
-  document.getElementById('patch-content').querySelectorAll('.field-input').forEach(inp => {
-    inp.addEventListener('input', () => {
-      const pid = inp.dataset.pid;
-      state[pid].val = inp.value;
-      refreshBytes(pid);
+  c.querySelectorAll('.patch-head').forEach(h=>{
+    h.addEventListener('click',e=>{
+      const tog=e.target.closest('.toggle');
+      if(tog){e.stopPropagation();toggleOn(tog.dataset.pid);return}
+      const pid=h.dataset.pid;
+      pstate[pid].open=!pstate[pid].open;
+      h.nextElementSibling.classList.toggle('open',pstate[pid].open);
+    });
+  });
+  c.querySelectorAll('.field-input').forEach(inp=>{
+    inp.addEventListener('input',()=>{
+      pstate[inp.dataset.pid].val=inp.value;
+      refreshBytes(inp.dataset.pid);
     });
   });
 }
 
-function refreshPatch(pid) {
-  const p = PATCHES.find(x => x.id === pid);
-  const card = document.querySelector(`.patch-card[data-pid="${pid}"]`);
-  if (!card) return;
-  const s = state[pid];
-  card.classList.toggle('enabled', s.on);
-  card.querySelector('.patch-name').style.color = s.on ? 'var(--green)' : '';
-  const toggle = card.querySelector('.toggle');
-  toggle.classList.toggle('on', s.on);
+function toggleOn(pid){
+  pstate[pid].on=!pstate[pid].on;
+  const card=document.querySelector(`.patch-card[data-pid="${pid}"]`);
+  if(!card)return;
+  card.classList.toggle('enabled',pstate[pid].on);
+  card.querySelector('.patch-name').style.color=pstate[pid].on?'var(--green)':'';
+  card.querySelector('.toggle').classList.toggle('on',pstate[pid].on);
   refreshBytes(pid);
+  renderSidebar();
+  updateUI();
 }
 
-function refreshBytes(pid) {
-  const p = PATCHES.find(x => x.id === pid);
-  const card = document.querySelector(`.patch-card[data-pid="${pid}"]`);
-  if (!card) return;
-  const s = state[pid];
-  const patched = s.on ? getPatchBytes(p) : [...p.orig];
-  const changed = s.on && patched.some((b,i) => b !== p.orig[i]);
-  const row = card.querySelector('.bytes-row');
-  if (!row) return;
-  row.innerHTML = `<span class="bytes-label">bytes:</span>` +
-    patched.map((b,i) => `<span class="byte-box ${changed && b !== p.orig[i] ? 'changed' : ''}">${hexb(b)}</span>`).join('');
+function refreshBytes(pid){
+  const p=PATCHES.find(x=>x.id===pid);
+  const card=document.querySelector(`.patch-card[data-pid="${pid}"]`);
+  if(!card)return;
+  const s=pstate[pid];
+  const patched=s.on?patchBytes(p):[...p.orig];
+  const changed=s.on&&patched.some((b,i)=>b!==p.orig[i]);
+  const row=card.querySelector('.bytes-row');
+  if(!row)return;
+  row.innerHTML=`<span class="bytes-lbl">${t('bytes')}</span>`+
+    patched.map((b,i)=>`<span class="byte-b${changed&&b!==p.orig[i]?' ch':''}">${hx(b)}</span>`).join('');
 }
 
-function updateSummary() {
-  const active = PATCHES.filter(p => state[p.id].on).length;
-  document.getElementById('s-active').textContent = active;
-  document.getElementById('s-total').textContent = PATCHES.length;
-  document.getElementById('btn-apply').disabled = !fileBytes || active === 0;
-
-  // Update sidebar counts
-  const catCounts = {};
-  PATCHES.forEach(p => { catCounts[p.cat] = (catCounts[p.cat]||0) + (state[p.id].on?1:0); });
-  const total = PATCHES.filter(p => state[p.id].on).length;
-  document.getElementById('cnt-all').textContent = total;
-  ['hud','hudpos','armas','firerate','reload','snark','memoria'].forEach(c => {
-    document.getElementById('cnt-'+c).textContent = catCounts[c]||0;
-  });
+function updateUI(){
+  const active=PATCHES.filter(p=>pstate[p.id].on).length;
+  document.getElementById('s-active').textContent=active;
+  document.getElementById('s-total').textContent=PATCHES.length;
+  document.getElementById('s-active-lbl').textContent=t('active');
+  document.getElementById('s-avail-lbl').textContent=t('available');
+  const canSave=fileBytes&&active>0;
+  document.getElementById('btn-apply').disabled=!canSave;
+  document.getElementById('btn-saveas').disabled=!canSave;
+  document.getElementById('btn-apply-lbl').textContent=t('apply');
+  document.getElementById('btn-saveas-lbl').textContent=t('saveas');
+  document.getElementById('btn-reset-lbl').textContent=t('reset');
 }
 
-// ── SIDEBAR NAV ──
-let currentCat = 'all';
-document.getElementById('sidebar').querySelectorAll('.sidebar-item').forEach(item => {
-  item.addEventListener('click', () => {
-    document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
-    item.classList.add('active');
-    currentCat = item.dataset.cat;
-    renderAll(currentCat);
-  });
-});
-
-// ── FILE LOADING ──
-function showStatus(msg, type) {
-  const bar = document.getElementById('status-bar');
-  bar.style.display = 'flex';
-  bar.className = 'status' + (type ? ' ' + type : '');
-  document.getElementById('status-text').textContent = msg;
+// ════════════════════════════════════════════════════════
+// FILE
+// ════════════════════════════════════════════════════════
+function showStatus(msg,type){
+  const bar=document.getElementById('status-bar');
+  bar.style.display='flex';bar.className='status-bar'+(type?' '+type:'');
+  document.getElementById('status-text').textContent=msg;
 }
 
-function loadFile(file) {
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    fileBytes = new Uint8Array(e.target.result);
-    const mb = (fileBytes.length / 1048576).toFixed(2);
-    document.getElementById('hdr-meta').textContent = `${file.name}  ·  ${mb} MB`;
-    document.getElementById('drop-zone').style.display = 'none';
-    document.getElementById('patch-ui').style.display = 'block';
-    document.getElementById('s-file').textContent = file.name + ' — ' + mb + ' MB';
-    showStatus('Arquivo carregado. ' + PATCHES.length + ' patches disponíveis.', 'ok');
-    renderAll(currentCat);
+function loadFile(file){
+  if(!file)return;
+  fileName=file.name;
+  new FileReader().onload=e=>{
+    fileBytes=new Uint8Array(e.target.result);
+    const mb=(fileBytes.length/1048576).toFixed(2);
+    document.getElementById('hdr-file').textContent=`${file.name}  ·  ${mb} MB`;
+    document.getElementById('drop-zone').style.display='none';
+    document.getElementById('patch-ui').style.display='block';
+    document.getElementById('actions-bar').style.display='flex';
+    document.getElementById('s-file').textContent=`${file.name} — ${mb} MB`;
+    showStatus(t('loaded').replace('{n}',PATCHES.length),'ok');
+    renderAll();
   };
-  reader.readAsArrayBuffer(file);
+  const r=new FileReader();r.onload=e=>{
+    fileBytes=new Uint8Array(e.target.result);
+    const mb=(fileBytes.length/1048576).toFixed(2);
+    document.getElementById('hdr-file').textContent=`${file.name}  ·  ${mb} MB`;
+    document.getElementById('drop-zone').style.display='none';
+    document.getElementById('patch-ui').style.display='block';
+    document.getElementById('actions-bar').style.display='flex';
+    document.getElementById('s-file').textContent=`${file.name} — ${mb} MB`;
+    showStatus(t('loaded').replace('{n}',PATCHES.length),'ok');
+    renderAll();
+  };r.readAsArrayBuffer(file);
 }
 
-document.getElementById('drop-zone').addEventListener('click', () => document.getElementById('file-input').click());
-document.getElementById('file-input').addEventListener('change', e => loadFile(e.target.files[0]));
-const dz = document.getElementById('drop-zone');
-dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag'); });
-dz.addEventListener('dragleave', () => dz.classList.remove('drag'));
-dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('drag'); loadFile(e.dataTransfer.files[0]); });
+const dz=document.getElementById('drop-zone');
+dz.addEventListener('click',()=>document.getElementById('file-input').click());
+document.getElementById('file-input').addEventListener('change',e=>loadFile(e.target.files[0]));
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag')});
+dz.addEventListener('dragleave',()=>dz.classList.remove('drag'));
+dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag');loadFile(e.dataTransfer.files[0])});
 
-// ── APPLY ──
-document.getElementById('btn-apply').addEventListener('click', () => {
-  if (!fileBytes) return;
-  const out = new Uint8Array(fileBytes);
-  let count = 0;
-  PATCHES.forEach(p => {
-    if (!state[p.id].on) return;
-    const bytes = getPatchBytes(p);
-    for (let i = 0; i < bytes.length; i++) out[p.offset + i] = bytes[i];
-    count++;
+// ════════════════════════════════════════════════════════
+// BUILD & SAVE
+// ════════════════════════════════════════════════════════
+function buildOut(){
+  const out=new Uint8Array(fileBytes);let n=0;
+  PATCHES.forEach(p=>{if(!pstate[p.id].on)return;patchBytes(p).forEach((b,i)=>{out[p.offset+i]=b});n++});
+  return{out,n};
+}
+function dlBlob(bytes,name){
+  const url=URL.createObjectURL(new Blob([bytes],{type:'application/octet-stream'}));
+  const a=document.createElement('a');a.href=url;a.download=name;a.click();URL.revokeObjectURL(url);
+}
+
+document.getElementById('btn-apply').addEventListener('click',()=>{
+  if(!fileBytes)return;const{out,n}=buildOut();
+  dlBlob(out,fileName);showStatus(t('applied').replace('{n}',n),'ok');
+});
+
+document.getElementById('btn-saveas').addEventListener('click',async()=>{
+  if(!fileBytes)return;const{out,n}=buildOut();
+  if(window.showSaveFilePicker){
+    try{
+      const fh=await showSaveFilePicker({suggestedName:fileName,types:[{description:'PS2 ELF',accept:{'application/octet-stream':['.elf','.ELF']}}]});
+      const ws=await fh.createWritable();await ws.write(out);await ws.close();
+      showStatus(t('applied').replace('{n}',n),'ok');
+    }catch(err){if(err.name!=='AbortError'){dlBlob(out,fileName);showStatus(t('applied').replace('{n}',n),'ok')}}
+  }else{dlBlob(out,fileName);showStatus(t('applied').replace('{n}',n),'ok')}
+});
+
+document.getElementById('btn-reset').addEventListener('click',()=>{
+  PATCHES.forEach(p=>{pstate[p.id]={on:false,val:p.edit?p.edit[0].def:null,open:false}});
+  renderAll();showStatus(t('reset_msg'),'');
+});
+
+// ════════════════════════════════════════════════════════
+// LANGUAGE
+// ════════════════════════════════════════════════════════
+function applyLang(l){
+  lang=l;const L2=I18N[l];
+  document.getElementById('hdr-flag').textContent=L2.lang_flag;
+  document.getElementById('hdr-lang-label').textContent=L2.lang_label;
+  document.getElementById('dz-main').innerHTML=L2.dz_main;
+  document.getElementById('dz-sub').textContent=L2.dz_sub;
+  document.getElementById('lm-title').textContent=L2.lm_title;
+  document.getElementById('lm-sub').textContent=L2.lm_sub;
+  if(fileBytes)renderAll();else{renderSidebar();updateUI()}
+}
+
+// Language modal
+document.getElementById('lang-overlay').querySelectorAll('.lang-option').forEach(opt=>{
+  opt.addEventListener('click',()=>{
+    const l=opt.dataset.lang;
+    document.getElementById('lang-overlay').style.display='none';
+    applyLang(l);
   });
-  const blob = new Blob([out], { type: 'application/octet-stream' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = 'SLUS_200_66.ELF'; a.click();
-  URL.revokeObjectURL(url);
-  showStatus(`${count} patches aplicados. Arquivo baixado com sucesso.`, 'ok');
 });
 
-// ── RESET ──
-document.getElementById('btn-reset').addEventListener('click', () => {
-  PATCHES.forEach(p => { state[p.id] = { on: false, val: p.edit ? p.edit[0].def : null, open: false }; });
-  renderAll(currentCat);
-  showStatus('Todos os patches foram resetados.', '');
+// Re-open modal from header button
+document.getElementById('hdr-lang-btn').addEventListener('click',()=>{
+  document.getElementById('lang-overlay').style.display='flex';
 });
 
-// ── DOWNLOAD SOURCE ──
-document.getElementById('btn-src').addEventListener('click', () => {
-  const src = document.documentElement.outerHTML;
-  const blob = new Blob([src], { type: 'text/html' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = 'hl_ps2_patcher.html'; a.click();
-  URL.revokeObjectURL(url);
-});
-
-// ── INIT ──
-updateSummary();
+// ════════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════════
+renderSidebar();
+updateUI();
 </script>
 </body>
 </html>
