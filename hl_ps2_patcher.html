@@ -300,9 +300,9 @@ pt:{
   cat_all:'Todos os patches',
   cat_hud:'HUD — Cores',cat_hudpos:'HUD — Posições',
   cat_armas:'Armas — Ammo',cat_firerate:'Fire Rate',
-  cat_reload:'Reload Time',cat_snark:'Snark',cat_rede:'Rede / Connect',cat_memoria:'Memória',
+  cat_reload:'Reload Time',cat_gameplay:'Gameplay',cat_snark:'Snark',cat_rede:'Rede / Connect',cat_memoria:'Memória',
   icon_hud:'🎨',icon_hudpos:'📐',icon_armas:'🔫',icon_firerate:'⚡',
-  icon_reload:'🔄',icon_snark:'🐛',icon_rede:'🌐',icon_memoria:'💾',
+  icon_reload:'🔄',icon_gameplay:'🎮',icon_snark:'🐛',icon_rede:'🌐',icon_memoria:'💾',
   active:'patches ativos',available:'disponíveis',bytes:'bytes:',
   apply:'Aplicar e Baixar',saveas:'Salvar Como…',reset:'Resetar Tudo',
   dz_main:'<b>Clique ou arraste</b> o arquivo SLUS_200_66.ELF',
@@ -338,6 +338,11 @@ pt:{
     sub:'Float via instrução LUI (sem ORI)',
     body:`O reload time é um <b>float hardcoded</b> na função <code>Reload()</code> de cada arma. Usa apenas <code>LUI</code> sem ORI (parte baixa do float = 0).\n\nEditar: mude os <b>2 primeiros bytes</b> da instrução LUI.\n\n<b>Crossbow</b>: 4.5s  ·  <b>Python</b>: 4.0s  ·  <b>RPG</b>: 3.5s\n<b>Shotgun</b>: 2.0s (loop de shell)  ·  <b>MP5/Glock/Egon</b>: 1.5s`
   },
+  info_gameplay:{
+    title:'Parâmetros gerais de gameplay',
+    sub:'FOV, saúde, violência, cadáveres, monstros',
+    body:`Constantes de gameplay hardcoded no ELF — modificáveis via ADDIU:\n\n<b>FOV (campo de visão)</b>: padrão 90°. Aumentar dá visão periférica, diminuir cria efeito de zoom. Valores acima de 150° causam distorção.\n<b>Saúde inicial</b>: com quanto HP Gordon começa cada mapa. Padrão: 100.\n<b>Gibs / Sangue</b>: flags individuais para pedaços de corpo (gibs), sangue humano e fluido alienígena. Desativar alivia memória e melhora performance.\n<b>Fila de cadáveres</b>: quantos corpos ficam na cena ao mesmo tempo. Padrão: 2. Aumentar pode causar lentidão em combate intenso.\n<b>Monstros em MP</b>: permite NPCs em modo multiplayer/coop. Padrão: 1 (ativado).`
+  },
   info_snark:{
     title:'CSqueakGrenade',
     sub:'Gearbox modificou vs versão PC',
@@ -361,9 +366,9 @@ en:{
   cat_all:'All patches',
   cat_hud:'HUD — Colors',cat_hudpos:'HUD — Positions',
   cat_armas:'Weapons — Ammo',cat_firerate:'Fire Rate',
-  cat_reload:'Reload Time',cat_snark:'Snark',cat_rede:'Network / Connect',cat_memoria:'Memory',
+  cat_reload:'Reload Time',cat_gameplay:'Gameplay',cat_snark:'Snark',cat_rede:'Network / Connect',cat_memoria:'Memory',
   icon_hud:'🎨',icon_hudpos:'📐',icon_armas:'🔫',icon_firerate:'⚡',
-  icon_reload:'🔄',icon_snark:'🐛',icon_rede:'🌐',icon_memoria:'💾',
+  icon_reload:'🔄',icon_gameplay:'🎮',icon_snark:'🐛',icon_rede:'🌐',icon_memoria:'💾',
   active:'active patches',available:'available',bytes:'bytes:',
   apply:'Apply & Download',saveas:'Save As…',reset:'Reset All',
   dz_main:'<b>Click or drag</b> SLUS_200_66.ELF here',
@@ -398,9 +403,12 @@ en:{
     sub:'Float via LUI-only instruction (no ORI)',
     body:`Reload time is a <b>hardcoded float</b> in each weapon's <code>Reload()</code>. Uses only <code>LUI</code>, no ORI (float low part = 0).\n\nTo edit: change the <b>first 2 bytes</b> of the LUI instruction.\n\n<b>Crossbow</b>: 4.5s  ·  <b>Python</b>: 4.0s  ·  <b>RPG</b>: 3.5s\n<b>Shotgun</b>: 2.0s (per shell)  ·  <b>MP5/Glock/Egon</b>: 1.5s`
   },
+  info_gameplay:{
+    title:'General gameplay parameters',
+    sub:'FOV, health, violence, corpses, monsters',
+    body:`Gameplay constants hardcoded in the ELF — modifiable via ADDIU:\n\n<b>FOV (field of view)</b>: default 90°. Increasing gives peripheral vision, decreasing creates a zoom effect. Values above 150° cause distortion.\n<b>Starting health</b>: HP Gordon starts each map with. Default: 100.\n<b>Gibs / Blood</b>: individual flags for body parts (gibs), human blood, and alien fluid. Disabling improves performance and saves memory.\n<b>Corpse queue</b>: how many bodies stay in the scene simultaneously. Default: 2. Increasing may slow down intense combat.\n<b>Monsters in MP</b>: allows NPCs in multiplayer/coop mode. Default: 1 (enabled).`
+  },
   info_snark:{
-    title:'CSqueakGrenade',
-    sub:'Gearbox modifications vs PC version',
     body:`The Snark is a living grenade that chases enemies. Gearbox doubled the PC lifetime:\n\n<b>Lifetime</b>: PC=15s → PS2=30s before self-destruct\n<b>Clip</b>: PS2 added a clip of 5 (PC used WEAPON_NOCLIP=-1)\n\n<b>NOP A+B</b>: removes ammo consumption on throw. NOP in MIPS = <code>0x00000000</code>.\n\nLifetime 32767 ≈ 9 hours (effectively infinite).`
   },
   info_rede:{
@@ -500,6 +508,21 @@ const PATCHES=[
   {id:'allowm',  cat:'gameplay',n:{pt:'Monstros em Multiplayer',en:'Monsters in Multiplayer'},
    d:{pt:'Permite monstros em modo multiplayer/coop (1=sim, 0=não).',en:'Allow monsters in multiplayer/coop mode (1=yes, 0=no).'},
    offset:0x00053edc,orig:[0x01,0x00,0x02,0x24],edit:[{lp:'On/Off',le:'On/Off',k:'v',byte:0,min:0,max:1,def:1}]},
+  {id:'motd',    cat:'gameplay',n:{pt:'MOTD — Tempo de exibição',en:'MOTD — Display time'},
+   d:{pt:'Segundos que o MOTD (mensagem do servidor) fica na tela. Padrão: 10s.',en:'Seconds the server MOTD stays on screen. Default: 10s.'},
+   offset:0x0001d440,orig:[0x0A,0x00,0x02,0x24],edit:[{lp:'Segundos (1–60)',le:'Seconds (1–60)',k:'v',byte:0,min:1,max:60,def:10}]},
+  {id:'zoom_sens',cat:'gameplay',n:{pt:'Sensibilidade no zoom',en:'Zoom sensitivity'},
+   d:{pt:'Multiplicador de sensibilidade do mouse ao usar zoom (mira da crossbow/sniper). Padrão: 1.',en:'Mouse sensitivity multiplier when zooming (crossbow/sniper scope). Default: 1.'},
+   offset:0x00017d60,orig:[0x01,0x00,0x02,0x24],edit:[{lp:'Multiplicador (1–5)',le:'Multiplier (1–5)',k:'v',byte:0,min:1,max:5,def:1}]},
+  {id:'killfeed_t',cat:'gameplay',n:{pt:'Kill feed — duração',en:'Kill feed — duration'},
+   d:{pt:'Duração de cada entrada no kill feed (hud_deathnotice_time). Padrão: 1.',en:'Duration of each kill feed entry (hud_deathnotice_time). Default: 1.'},
+   offset:0x000183c4,orig:[0x01,0x00,0x02,0x24],edit:[{lp:'Tempo (1–10)',le:'Time (1–10)',k:'v',byte:0,min:1,max:10,def:1}]},
+  {id:'chat_t',   cat:'gameplay',n:{pt:'Chat — duração',en:'Chat — duration'},
+   d:{pt:'Duração das mensagens de chat na tela (hud_saytext_time). Padrão: 1.',en:'Duration of chat messages on screen (hud_saytext_time). Default: 1.'},
+   offset:0x0001d93c,orig:[0x01,0x00,0x02,0x24],edit:[{lp:'Tempo (1–10)',le:'Time (1–10)',k:'v',byte:0,min:1,max:10,def:1}]},
+  {id:'hist_t',   cat:'gameplay',n:{pt:'Item pickup — duração',en:'Item pickup — duration'},
+   d:{pt:'Duração do histórico de itens coletados na HUD (hud_drawhistory_time). Padrão: 1.',en:'Duration of item pickup history on HUD (hud_drawhistory_time). Default: 1.'},
+   offset:0x00012880,orig:[0x01,0x00,0x06,0x24],edit:[{lp:'Tempo (1–10)',le:'Time (1–10)',k:'v',byte:0,min:1,max:10,def:1}]},
 
   // SNARK
   {id:'snk_ammo',cat:'snark',n:{pt:'Snark — Max ammo',en:'Snark — Max ammo'},d:{pt:'Máximo de Snarks carregáveis. Padrão: 15.',en:'Max Snarks carried. Default: 15.'},offset:0x000EE9F0,orig:[0xFF,0x00,0x08,0x24],edit:[{lp:'Max ammo',le:'Max ammo',k:'v',byte:0,min:1,max:255,def:255}]},
