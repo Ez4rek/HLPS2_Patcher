@@ -1,0 +1,1247 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HL PS2 ELF Patcher</title>
+<style>
+:root{
+  --bg:#0b0b0f;--bg2:#111117;--bg3:#18181f;--bg4:#1e1e27;
+  --border:#252530;--border2:#32323f;--border3:#3e3e50;
+  --text:#f0f0f8;--text2:#8888aa;--text3:#55556a;
+  --green:#00e676;--green2:#00c853;--green-bg:#00251a;--green-dim:#003d26;
+  --red:#ff4f4f;--red-bg:#2a0a0a;
+  --amber:#ffab00;--amber-bg:#251c00;
+  --blue:#448aff;--blue-bg:#0a1428;
+  --purple:#ce93d8;--purple-bg:#1a0d26;
+  --cyan:#00e5ff;--cyan-bg:#00151a;
+  --mono:'JetBrains Mono','Courier New',monospace;
+  --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --radius:6px;--radius-lg:10px;
+  --shadow:0 4px 24px rgba(0,0,0,.4);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13px;min-height:100vh;overflow:hidden}
+
+/* ── LANGUAGE MODAL ── */
+.lang-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:1000;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.lang-modal{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);width:340px;overflow:hidden;box-shadow:var(--shadow)}
+.lang-modal-head{padding:1.5rem 1.5rem 1rem;border-bottom:1px solid var(--border)}
+.lang-modal-logo{font-size:11px;letter-spacing:2px;color:var(--text3);text-transform:uppercase;margin-bottom:.5rem}
+.lang-modal-title{font-size:18px;font-weight:700;color:var(--text);letter-spacing:.5px}
+.lang-modal-sub{font-size:12px;color:var(--text3);margin-top:.25rem}
+.lang-options{padding:1rem}
+.lang-option{display:flex;align-items:center;gap:12px;padding:.75rem 1rem;border-radius:var(--radius);border:1px solid var(--border2);background:var(--bg3);cursor:pointer;margin-bottom:.5rem;transition:all .15s}
+.lang-option:hover{border-color:var(--green);background:var(--green-bg)}
+.lang-option:last-child{margin-bottom:0}
+.lang-flag{font-size:22px;flex-shrink:0}
+.lang-name{font-size:14px;font-weight:600;color:var(--text)}
+.lang-native{font-size:11px;color:var(--text3);margin-top:1px}
+.lang-option .lang-check{margin-left:auto;color:var(--green);font-size:16px;display:none}
+
+/* ── HEADER ── */
+.hdr{height:52px;display:flex;align-items:center;gap:10px;padding:0 1.25rem;border-bottom:1px solid var(--border);background:var(--bg2);flex-shrink:0}
+.hdr-logo{display:flex;align-items:center;gap:8px}
+.hdr-logo-icon{width:28px;height:28px;border-radius:6px;background:linear-gradient(135deg,var(--green),var(--cyan));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#000;letter-spacing:-1px;flex-shrink:0}
+.hdr-logo-text{font-size:13px;font-weight:700;letter-spacing:1px;color:var(--text);text-transform:uppercase}
+.hdr-logo-sub{font-size:10px;color:var(--text3);letter-spacing:.5px}
+.hdr-divider{width:1px;height:20px;background:var(--border2);margin:0 4px}
+.hdr-tag{font-size:10px;padding:2px 7px;border-radius:3px;border:1px solid var(--border2);color:var(--text3);letter-spacing:.5px;text-transform:uppercase;background:var(--bg3)}
+.hdr-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.hdr-file-info{font-size:11px;color:var(--text3);padding-right:4px}
+.hdr-lang-btn{display:flex;align-items:center;gap:6px;padding:4px 10px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--bg3);cursor:pointer;font-family:var(--mono);font-size:11px;color:var(--text2);transition:all .15s;letter-spacing:.3px}
+.hdr-lang-btn:hover{border-color:var(--green);color:var(--green);background:var(--green-bg)}
+.hdr-lang-btn .flag{font-size:14px}
+
+/* ── SHELL ── */
+.shell{display:flex;height:calc(100vh - 52px);overflow:hidden}
+
+/* ── SIDEBAR ── */
+.sidebar{width:220px;flex-shrink:0;border-right:1px solid var(--border);overflow-y:auto;background:var(--bg2);display:flex;flex-direction:column}
+.sb-top{padding:.75rem .75rem .5rem;flex:1}
+.sb-section{font-size:10px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;padding:.6rem .5rem .3rem}
+.sb-item{display:flex;align-items:center;gap:8px;padding:.45rem .75rem;cursor:pointer;color:var(--text2);border-radius:var(--radius);margin-bottom:2px;transition:all .12s;font-size:12px;position:relative}
+.sb-item:hover{background:var(--bg3);color:var(--text)}
+.sb-item.active{background:var(--green-bg);color:var(--green)}
+.sb-item .sb-icon{font-size:14px;width:20px;text-align:center;flex-shrink:0}
+.sb-item .sb-label{flex:1}
+.sb-item .sb-cnt{font-size:10px;background:var(--bg4);color:var(--text3);padding:1px 6px;border-radius:10px;min-width:22px;text-align:center;transition:all .12s}
+.sb-item.active .sb-cnt{background:var(--green-dim);color:var(--green)}
+.sb-divider{height:1px;background:var(--border);margin:.4rem .5rem}
+.sb-bottom{padding:.75rem;border-top:1px solid var(--border);background:var(--bg2)}
+.sb-stat{font-size:11px;color:var(--text3);padding:.3rem 0;display:flex;justify-content:space-between}
+.sb-stat b{color:var(--green)}
+
+/* ── MAIN ── */
+.main{flex:1;overflow-y:auto;display:flex;flex-direction:column}
+.main-inner{padding:1.25rem;flex:1}
+
+/* ── DROP ZONE ── */
+.drop-zone{border:1.5px dashed var(--border2);border-radius:var(--radius-lg);padding:3rem 2rem;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:1.5rem;background:var(--bg2);position:relative;overflow:hidden}
+.drop-zone::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,230,118,.02) 0%,transparent 60%);pointer-events:none}
+.drop-zone:hover,.drop-zone.drag{border-color:var(--green);background:var(--green-bg);box-shadow:0 0 0 1px var(--green-dim) inset}
+.dz-icon{width:52px;height:52px;border-radius:12px;background:var(--bg3);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;transition:all .2s}
+.drop-zone:hover .dz-icon,.drop-zone.drag .dz-icon{border-color:var(--green);background:var(--green-bg)}
+.dz-icon svg{opacity:.5;transition:opacity .2s}
+.drop-zone:hover .dz-icon svg,.drop-zone.drag .dz-icon svg{opacity:1}
+.dz-main{font-size:14px;color:var(--text2);margin-bottom:.35rem}
+.dz-main b{color:var(--text)}
+.dz-sub{font-size:11px;color:var(--text3)}
+#file-input{display:none}
+
+/* ── STATUS ── */
+.status-bar{display:flex;align-items:center;gap:10px;padding:.65rem 1rem;border-radius:var(--radius);font-size:12px;margin-bottom:1.25rem;border:1px solid var(--border);background:var(--bg3);color:var(--text3)}
+.status-bar.ok{border-color:var(--green-dim);background:var(--green-bg);color:var(--green)}
+.status-bar.err{border-color:var(--red);background:var(--red-bg);color:var(--red)}
+.status-dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex-shrink:0}
+
+/* ── SUMMARY STRIP ── */
+.summary-strip{display:flex;align-items:center;gap:16px;padding:.6rem 1rem;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);font-size:11px;color:var(--text2);margin-bottom:1.25rem;flex-wrap:wrap}
+.summary-strip b{color:var(--text)}
+.summary-strip .sum-green{color:var(--green);font-weight:600}
+.summary-strip .sep{color:var(--border2)}
+
+/* ── CAT INFO ── */
+.cat-info{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:.85rem;overflow:hidden}
+.cat-info-head{display:flex;align-items:center;gap:10px;padding:.75rem 1rem;cursor:pointer;user-select:none;transition:background .12s}
+.cat-info-head:hover{background:var(--bg3)}
+.cih-icon{font-size:18px;flex-shrink:0}
+.cih-left{flex:1}
+.cih-title{font-size:11px;font-weight:700;color:var(--amber);letter-spacing:1.5px;text-transform:uppercase}
+.cih-sub{font-size:11px;color:var(--text3);margin-top:1px}
+.cih-badge{font-size:10px;padding:2px 8px;border-radius:10px;background:var(--bg4);border:1px solid var(--border2);color:var(--text3)}
+.cih-chevron{color:var(--text3);transition:transform .2s;font-size:12px;flex-shrink:0}
+.cih-chevron.open{transform:rotate(90deg)}
+.cat-info-body{display:none;border-top:1px solid var(--border)}
+.cat-info-body.open{display:block}
+.cib-inner{padding:1rem 1.25rem;font-size:12px;color:var(--text2);line-height:1.9;background:linear-gradient(to bottom,var(--bg3),var(--bg2))}
+.cib-inner p{margin-bottom:.3rem}
+.cib-inner b{color:var(--text)}
+.cib-inner code{font-family:var(--mono);background:var(--bg4);border:1px solid var(--border2);padding:1px 6px;border-radius:3px;font-size:11px;color:var(--cyan)}
+.cib-inner ul{margin:.4rem 0 .4rem 1.1rem}
+.cib-inner li{margin-bottom:.25rem}
+
+/* ── PATCH GRID ── */
+.patch-grid{display:flex;flex-direction:column;gap:4px;margin-bottom:1.25rem}
+
+/* ── PATCH CARD ── */
+.patch-card{border:1px solid var(--border);border-radius:var(--radius);background:var(--bg2);overflow:hidden;transition:border-color .15s,box-shadow .15s}
+.patch-card:hover{border-color:var(--border2)}
+.patch-card.enabled{border-color:var(--green-dim);box-shadow:0 0 0 1px var(--green-bg) inset}
+.patch-head{display:flex;align-items:center;gap:10px;padding:.55rem 1rem;cursor:pointer;user-select:none;transition:background .1s}
+.patch-head:hover{background:var(--bg3)}
+.patch-name{font-size:12px;color:var(--text2);flex:1;transition:color .15s}
+.patch-card.enabled .patch-name{color:var(--green)}
+.patch-off{font-size:10px;color:var(--text3);font-family:var(--mono);letter-spacing:.5px}
+.toggle{width:36px;height:20px;border-radius:10px;background:var(--bg4);border:1px solid var(--border2);position:relative;cursor:pointer;flex-shrink:0;transition:background .2s,border-color .2s}
+.toggle.on{background:var(--green2);border-color:var(--green2)}
+.toggle::after{content:'';position:absolute;top:3px;left:3px;width:12px;height:12px;border-radius:50%;background:#fff;transition:left .2s,box-shadow .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.toggle.on::after{left:19px;box-shadow:0 1px 3px rgba(0,0,0,.4)}
+
+.patch-body{display:none;padding:.75rem 1rem;border-top:1px solid var(--border);background:linear-gradient(to bottom,var(--bg3),var(--bg2))}
+.patch-body.open{display:block}
+.patch-desc{font-size:11px;color:var(--text3);line-height:1.7;margin-bottom:.7rem}
+.field-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.field-label{font-size:11px;color:var(--text3);width:160px;flex-shrink:0}
+.field-input{flex:1;font-family:var(--mono);font-size:12px;height:30px;padding:0 10px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--bg4);color:var(--text);outline:none;transition:border-color .15s}
+.field-input:focus{border-color:var(--green);box-shadow:0 0 0 2px var(--green-bg)}
+.bytes-row{display:flex;align-items:center;gap:4px;margin-top:8px;flex-wrap:wrap}
+.bytes-lbl{font-size:10px;color:var(--text3);margin-right:2px}
+.byte-b{width:28px;height:24px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:11px;font-family:var(--mono);border:1px solid var(--border);color:var(--text3);background:var(--bg4);transition:all .15s}
+.byte-b.ch{border-color:var(--green);color:var(--green);background:var(--green-bg);box-shadow:0 0 6px rgba(0,230,118,.15)}
+.nop-info{font-size:11px;color:var(--text3);margin-top:6px;display:flex;align-items:center;gap:6px}
+.nop-info code{font-family:var(--mono);background:var(--green-bg);border:1px solid var(--green-dim);padding:1px 6px;border-radius:3px;font-size:10px;color:var(--green)}
+
+/* ── ACTIONS ── */
+.actions-bar{padding:1rem 1.25rem;border-top:1px solid var(--border);background:var(--bg2);display:flex;gap:8px;flex-wrap:wrap;flex-shrink:0}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:0 16px;height:34px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--bg3);color:var(--text2);font-family:var(--mono);font-size:12px;cursor:pointer;transition:all .12s;letter-spacing:.3px;white-space:nowrap;text-transform:uppercase}
+.btn:hover{color:var(--text);border-color:var(--border3);background:var(--bg4)}
+.btn:active{transform:scale(.97)}
+.btn:disabled{opacity:.3;cursor:not-allowed;transform:none}
+.btn-icon{font-size:14px}
+.btn.primary{background:linear-gradient(135deg,var(--green),var(--green2));border:none;color:#000;font-weight:800;letter-spacing:.5px}
+.btn.primary:hover:not(:disabled){opacity:.88;box-shadow:0 2px 12px rgba(0,230,118,.3)}
+.btn.saveas{border-color:var(--purple-bg);color:var(--purple)}
+.btn.saveas:hover{background:var(--purple-bg);border-color:var(--purple)}
+.btn.danger{color:var(--text3)}
+.btn.danger:hover{color:var(--red);border-color:var(--red-bg)}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--border3)}
+
+/* ── EMPTY STATE ── */
+.empty-state{text-align:center;padding:3rem 1rem;color:var(--text3)}
+.empty-state p{font-size:12px;margin-top:.5rem}
+
+/* ── HUD VISUALIZER ── */
+.hud-viz{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:.85rem;overflow:hidden}
+.hud-viz-head{display:flex;align-items:center;gap:10px;padding:.75rem 1rem;cursor:pointer;user-select:none;transition:background .12s;border-bottom:1px solid var(--border)}
+.hud-viz-head:hover{background:var(--bg3)}
+.hud-viz-title{font-size:11px;font-weight:700;color:var(--cyan);letter-spacing:1.5px;text-transform:uppercase}
+.hud-viz-sub{font-size:11px;color:var(--text3);margin-top:1px}
+.hud-viz-chevron{color:var(--text3);transition:transform .2s;font-size:12px;margin-left:auto}
+.hud-viz-chevron.open{transform:rotate(90deg)}
+.hud-viz-body{display:none}
+.hud-viz-body.open{display:block}
+.hud-viz-inner{padding:1rem 1.25rem;background:var(--bg3)}
+.viz-layout{display:grid;grid-template-columns:190px 1fr;gap:1rem;align-items:start}
+.viz-ch-row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.viz-ch-lbl{font-size:12px;font-weight:700;width:12px;flex-shrink:0}
+.viz-ch-lbl.r{color:#e05050}.viz-ch-lbl.g{color:#50c050}.viz-ch-lbl.b{color:#6090e0}
+.viz-ch-val{font-size:11px;font-family:var(--mono);width:28px;text-align:right;color:var(--text2);flex-shrink:0}
+.viz-range{-webkit-appearance:none;appearance:none;flex:1;height:4px;border-radius:2px;background:var(--bg4);border:1px solid var(--border2);outline:none;cursor:pointer}
+.viz-range::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--text);border:2px solid var(--bg2);cursor:pointer}
+.viz-swatch{width:100%;height:40px;border-radius:var(--radius);border:1px solid var(--border2);margin:10px 0 8px;display:flex;align-items:center;justify-content:center}
+.viz-hex{font-family:var(--mono);font-size:12px;font-weight:700}
+.viz-chips{display:flex;flex-wrap:wrap;gap:4px}
+.viz-chip{font-size:10px;font-family:var(--mono);background:var(--bg4);border:1px solid var(--border2);border-radius:3px;padding:2px 7px;color:var(--text3)}
+.viz-presets{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:10px}
+.viz-preset{border:1px solid var(--border2);border-radius:var(--radius);padding:5px 3px;cursor:pointer;background:var(--bg4);display:flex;flex-direction:column;align-items:center;gap:4px;transition:border-color .12s}
+.viz-preset:hover{border-color:var(--border3)}
+.viz-preset.active{border-color:var(--cyan)}
+.viz-preset-sw{width:100%;height:18px;border-radius:3px}
+.viz-preset-nm{font-size:9px;color:var(--text3);text-align:center;line-height:1.3}
+.viz-canvas-wrap{border-radius:var(--radius);overflow:hidden;border:1px solid var(--border2)}
+.viz-canvas-wrap canvas{display:block;width:100%;height:auto}
+</style>
+</head>
+<body>
+<!-- LANGUAGE MODAL -->
+<div class="lang-overlay" id="lang-overlay">
+  <div class="lang-modal">
+    <div class="lang-modal-head">
+      <div class="lang-modal-logo">HL PS2 ELF PATCHER</div>
+      <div class="lang-modal-title" id="lm-title">Select Language</div>
+      <div class="lang-modal-sub" id="lm-sub">Choose your preferred language to continue</div>
+    </div>
+    <div class="lang-options">
+      <div class="lang-option" data-lang="pt">
+        <span class="lang-flag">🇧🇷</span>
+        <div>
+          <div class="lang-name">Português</div>
+          <div class="lang-native">Brasileiro</div>
+        </div>
+        <span class="lang-check">✓</span>
+      </div>
+      <div class="lang-option" data-lang="en">
+        <span class="lang-flag">🇺🇸</span>
+        <div>
+          <div class="lang-name">English</div>
+          <div class="lang-native">American English</div>
+        </div>
+        <span class="lang-check">✓</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- HEADER -->
+<header class="hdr">
+  <div class="hdr-logo">
+    <div class="hdr-logo-icon">HL</div>
+    <div>
+      <div class="hdr-logo-text">PS2 ELF Patcher</div>
+      <div class="hdr-logo-sub">SLUS_200_66 · Gearbox 2001</div>
+    </div>
+  </div>
+  <div class="hdr-divider"></div>
+  <span class="hdr-tag" id="patch-count-tag">0 patches</span>
+  <div class="hdr-right">
+    <span class="hdr-file-info" id="hdr-file"></span>
+    <button class="hdr-lang-btn" id="hdr-lang-btn">
+      <span class="flag" id="hdr-flag">🌐</span>
+      <span id="hdr-lang-label">—</span>
+      <span style="color:var(--text3);font-size:10px">▼</span>
+    </button>
+  </div>
+</header>
+
+<div class="shell">
+  <!-- SIDEBAR -->
+  <nav class="sidebar" id="sidebar"></nav>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="main-inner">
+
+      <!-- DROP ZONE -->
+      <div class="drop-zone" id="drop-zone">
+        <div class="dz-icon">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.5">
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="12" y1="18" x2="12" y2="12"/>
+            <polyline points="9 15 12 12 15 15"/>
+          </svg>
+        </div>
+        <p class="dz-main" id="dz-main"></p>
+        <p class="dz-sub" id="dz-sub"></p>
+      </div>
+      <input type="file" id="file-input" accept=".elf,.ELF">
+
+      <!-- STATUS -->
+      <div class="status-bar" id="status-bar" style="display:none">
+        <span class="status-dot"></span>
+        <span id="status-text"></span>
+      </div>
+
+      <!-- PATCH UI -->
+      <div id="patch-ui" style="display:none">
+        <div class="summary-strip">
+          <span><b id="s-active">0</b> <span id="s-active-lbl"></span></span>
+          <span class="sep">·</span>
+          <span><b id="s-total">0</b> <span id="s-avail-lbl"></span></span>
+          <span class="sep">·</span>
+          <span class="sum-green" id="s-file"></span>
+        </div>
+        <div id="patch-content"></div>
+      </div>
+
+    </div>
+
+    <!-- ACTION BAR -->
+    <div class="actions-bar" id="actions-bar" style="display:none">
+      <button class="btn primary" id="btn-apply" disabled>
+        <span class="btn-icon">▶</span><span id="btn-apply-lbl"></span>
+      </button>
+      <button class="btn saveas" id="btn-saveas" disabled>
+        <span class="btn-icon">💾</span><span id="btn-saveas-lbl"></span>
+      </button>
+      <button class="btn danger" id="btn-reset">
+        <span class="btn-icon">↺</span><span id="btn-reset-lbl"></span>
+      </button>
+    </div>
+  </div>
+</div>
+<script>
+// ════════════════════════════════════════════════════════
+// I18N
+// ════════════════════════════════════════════════════════
+const I18N = {
+pt:{
+  lang_flag:'🇧🇷', lang_label:'Português',
+  lm_title:'Selecionar idioma', lm_sub:'Escolha o idioma para continuar',
+  nav_all:'Todos', nav_section:'Categorias',
+  cat_all:'Todos os patches',
+  cat_hud:'HUD — Cores',cat_hudpos:'HUD — Posições',
+  cat_armas:'Armas — Ammo',cat_firerate:'Fire Rate',
+  cat_reload:'Reload Time',cat_gameplay:'Gameplay',cat_viewmodel:'Viewmodel / Bob',cat_snark:'Snark',cat_rede:'Rede / Connect',cat_memoria:'Memória',cat_intro:'Intro Movie',
+  icon_hud:'🎨',icon_hudpos:'📐',icon_armas:'🔫',icon_firerate:'⚡',
+  icon_reload:'🔄',icon_gameplay:'🎮',icon_viewmodel:'🔫',icon_snark:'🐛',icon_rede:'🌐',icon_memoria:'💾',icon_intro:'🎬',
+  active:'patches ativos',available:'disponíveis',bytes:'bytes:',
+  apply:'Aplicar e Baixar',saveas:'Salvar Como…',reset:'Resetar Tudo',
+  dz_main:'<b>Clique ou arraste</b> o arquivo SLUS_200_66.ELF',
+  dz_sub:'~2.66 MB · processado localmente, sem upload',
+  loaded:'Arquivo carregado — {n} patches disponíveis',
+  applied:'{n} patches aplicados.',reset_msg:'Patches resetados.',
+  err_nofile:'Nenhum arquivo carregado.',
+  patches_hdr:'patches',
+
+  // Category descriptions
+  info_hud:{
+    title:'Sistema de cores da HUD',
+    sub:'Cor global aplicada em todos os elementos',
+    body:`A HUD do Half-Life PS2 usa uma <b>cor global</b> definida por 3 canais hardcoded no cliente (<code>cl_dll/cl_hud.cpp</code>) e aplicada em vida, munição, suit e flashlight via vtable no objeto <code>0x00312E28</code>.\n\nCanais <b>R</b> e <b>G</b> são ADDIU imediatos — editáveis byte a byte. O canal <b>B</b> usa DADDU com $zero (hardcoded em zero); alterar requer substituir a instrução inteira.\n\nA cor padrão <code>RGB(255, 160, 0)</code> é o laranja clássico do Half-Life, equivalente às cvars <code>hud_r 255 hud_g 160 hud_b 0</code> da versão PC.`
+  },
+  info_hudpos:{
+    title:'Posicionamento dos elementos',
+    sub:'Coordenadas fixas em pixels na tela 640×448',
+    body:`Cada elemento tem sua própria função <b>Draw()</b> com posições hardcoded. O PS2 usa resolução <b>640×448</b> (NTSC).\n\n<b>Kill Feed (DeathNotice)</b> — canto superior direito: X=420, Y=84\n<b>Ammo HUD</b> — canto inferior direito: X base = 532 (= 640−108)\n<b>Geiger</b> — 6 barras empilhadas com Y individual: 28 → 95px\n<b>Train HUD</b> — indicador do trem: X=96, Y=128\n<b>Item Pickup</b> — histórico no lado direito da tela\n<b>ISlaveHud</b> — exclusivo PS2 (Alien Slave jogável)`
+  },
+  info_armas:{
+    title:'Munição e capacidade de armas',
+    sub:'iMaxClip e iMaxAmmo1 da struct ItemInfo',
+    body:`Cada arma preenche a struct <code>ItemInfo</code> via <b>GetItemInfo()</b>:\n\n<b>iMaxClip</b> (offset +28) — balas/projéteis por pente ou carga\n<b>iMaxAmmo1</b> (offset +12) — máximo carregável no inventário\n\nAmbos são ADDIU imediatos de 1 byte (0–255). Gauss e Egon <b>compartilham</b> o mesmo pool de energia — alterar um afeta os dois.`
+  },
+  info_firerate:{
+    title:'Taxa de disparo',
+    sub:'Float IEEE 754 — instrução LUI + ORI',
+    body:`O fire rate é um <b>float IEEE 754</b> dividido em duas instruções MIPS:\n<code>LUI $at, hi16</code> → carrega a parte alta\n<code>ORI $at, $at, lo16</code> → completa o valor e envia à FPU\n\nEditar requer mudar os <b>4 bytes da instrução ORI</b> (little-endian). Valores menores = disparo mais rápido. Abaixo de 0.05s podem ocorrer bugs de animação.`
+  },
+  info_reload:{
+    title:'Tempo de recarga',
+    sub:'Float via instrução LUI (sem ORI)',
+    body:`O reload time é um <b>float hardcoded</b> na função <code>Reload()</code> de cada arma. Usa apenas <code>LUI</code> sem ORI (parte baixa do float = 0).\n\nEditar: mude os <b>2 primeiros bytes</b> da instrução LUI.\n\n<b>Crossbow</b>: 4.5s  ·  <b>Python</b>: 4.0s  ·  <b>RPG</b>: 3.5s\n<b>Shotgun</b>: 2.0s (loop de shell)  ·  <b>MP5/Glock/Egon</b>: 1.5s`
+  },
+  info_gameplay:{
+    title:'Parâmetros gerais de gameplay',
+    sub:'FOV, saúde, violência, cadáveres, monstros',
+    body:`Constantes de gameplay hardcoded no ELF — modificáveis via ADDIU:\n\n<b>FOV (campo de visão)</b>: padrão 90°. Aumentar dá visão periférica, diminuir cria efeito de zoom. Valores acima de 150° causam distorção.\n<b>Saúde inicial</b>: com quanto HP Gordon começa cada mapa. Padrão: 100.\n<b>Gibs / Sangue</b>: flags individuais para pedaços de corpo (gibs), sangue humano e fluido alienígena. Desativar alivia memória e melhora performance.\n<b>Fila de cadáveres</b>: quantos corpos ficam na cena ao mesmo tempo. Padrão: 2. Aumentar pode causar lentidão em combate intenso.\n<b>Monstros em MP</b>: permite NPCs em modo multiplayer/coop. Padrão: 1 (ativado).`
+  },
+  info_viewmodel:{
+    title:'Weapon Bob & Sway',
+    sub:'Balanço e inércia da arma em V_CalcBob',
+    body:`O Half-Life usa duas funções para animar a arma na tela:\\n\\n<b>V_CalcBob</b>: calcula o balanço ao caminhar. Fórmula: bob = speed × cl_bob → bob = bob × 0.3 + bob × 0.7 × sin(cycle)\\n\\nOs fatores <b>0.3</b> e <b>0.7</b> são hardcoded no ELF. Zerá-los elimina todo o bob.\\n\\n<b>Weapon Sway</b>: inércia ao virar. Controlado pelo <b>sway_scale = 0.5</b>, também hardcoded. Zerar elimina o lag; aumentar cria efeito cinematográfico.`
+  },
+  info_snark:{
+    title:'CSqueakGrenade',
+    sub:'Gearbox modificou vs versão PC',
+    body:`O Snark é uma granada viva que persegue inimigos. A Gearbox dobrou o lifetime vs PC:\n\n<b>Lifetime</b>: PC=15s → PS2=30s antes de explodir\n<b>Clip</b>: PS2 adicionou clip de 5 (PC usava WEAPON_NOCLIP=-1)\n\n<b>NOP A+B</b>: elimina o consumo de ammo ao lançar. NOP em MIPS = <code>0x00000000</code>.\n\nLifetime de 32767 ≈ 9 horas (efetivamente infinito).`
+  },
+  info_rede:{
+    title:'Bypass WON + DEV9',
+    sub:'Permite usar connect sem autenticação online',
+    body:`O HL PS2 exige dois sistemas antes de aceitar o comando <code>connect</code>:\n\n<b>DEV9</b> — adaptador de rede do PS2 (PCSX2 precisa tê-lo configurado)\n<b>WON</b> — servidor de autenticação da Valve, desligado desde 2004\n\nSem os dois, o comando simplesmente não faz nada.\n\n<b>Patch 1 (bypass rede)</b>: remove a verificação de DEV9. O jogo tenta enviar o pacote mesmo sem o adaptador configurado no PCSX2.\n<b>Patch 2 (bypass WON state)</b>: ignora a checagem de estado de autenticação WON.\n<b>Patch 3 (bypass WON type)</b>: ignora a exigência de que o tipo de auth seja WON (val=3).\n\nCom os 3 patches, <code>connect IP:27015</code> funciona contra qualquer servidor GoldSrc — incluindo o <code>hl_ps2_server.py</code> desta sessão.`
+  },
+  info_memoria:{
+    title:'Limites de memória',
+    sub:'PS2 tem 32 MB de RAM — crashes em mapas grandes',
+    body:`Em mapas grandes, buffers estáticos podem encher e causar crash:\n\n<b>MAX_DECALS (512)</b> — marcas de tiro na geometria. Reduzir a 128 libera ~1 MB.\n<b>MAX_TEMP_ENTS (350)</b> — partículas temporárias (sangue, faíscas). Reduzir a 150 alivia picos de memória.\n<b>MAX_EDICTS (676)</b> — entidades simultâneas. Aumentar ajuda mapas densos, mas consome mais RAM.`
+  },
+  info_intro:{
+    title:'Intro Movie — Vídeo de abertura',
+    sub:'Exclusivo SLUS_209.28 (versão final) · requer MOVIES\\GEARBOX.PSS no disco',
+    body:`Na versão final (<b>SLUS_209.28</b>), a Gearbox removeu o vídeo de abertura que existia no demo (<b>SLUS_200.66</b>). Dois elementos foram apagados:\n\n<b>1 — String do caminho</b>: o slot em <code>0x003A0F70</code> que continha <code>cdrom0:\\MOVIES\\GEARBOX.PSS</code> foi zerado. O engine não consegue mais encontrar o arquivo.\n\n<b>2 — Chamada no startup</b>: o wrapper de init em <code>0x002E3A78</code> chamava <code>PlayMovie()</code> antes de <code>GameInit()</code>. As duas instruções que faziam isso (<code>LUI r2 / LW r2</code>, dead code sem uso) foram deixadas sem a chamada.\n\n<b>Estes dois patches restauram exatamente esses elementos.</b> Para funcionar, o arquivo <code>MOVIES\\GEARBOX.PSS</code> deve existir no disco — você pode usar o do DEMO como fonte.`
+  },
+},
+en:{
+  lang_flag:'🇺🇸', lang_label:'English',
+  lm_title:'Select Language', lm_sub:'Choose your preferred language to continue',
+  nav_all:'All', nav_section:'Categories',
+  cat_all:'All patches',
+  cat_hud:'HUD — Colors',cat_hudpos:'HUD — Positions',
+  cat_armas:'Weapons — Ammo',cat_firerate:'Fire Rate',
+  cat_reload:'Reload Time',cat_gameplay:'Gameplay',cat_viewmodel:'Viewmodel / Bob',cat_snark:'Snark',cat_rede:'Network / Connect',cat_memoria:'Memory',cat_intro:'Intro Movie',
+  icon_hud:'🎨',icon_hudpos:'📐',icon_armas:'🔫',icon_firerate:'⚡',
+  icon_reload:'🔄',icon_gameplay:'🎮',icon_viewmodel:'🔫',icon_snark:'🐛',icon_rede:'🌐',icon_memoria:'💾',icon_intro:'🎬',
+  active:'active patches',available:'available',bytes:'bytes:',
+  apply:'Apply & Download',saveas:'Save As…',reset:'Reset All',
+  dz_main:'<b>Click or drag</b> SLUS_200_66.ELF here',
+  dz_sub:'~2.66 MB · processed locally, no upload',
+  loaded:'File loaded — {n} patches available',
+  applied:'{n} patches applied.',reset_msg:'Patches reset.',
+  err_nofile:'No file loaded.',
+  patches_hdr:'patches',
+
+  info_hud:{
+    title:'HUD Color System',
+    sub:'Global color applied to all elements',
+    body:`The PS2 HUD uses a <b>global color</b> defined by 3 hardcoded channels in <code>cl_dll/cl_hud.cpp</code>, applied to health, ammo, suit and flashlight via vtable at <code>0x00312E28</code>.\n\n<b>R</b> and <b>G</b> are ADDIU immediates — editable byte by byte. The <b>B</b> channel uses DADDU with $zero (hardcoded to zero); changing it requires replacing the full instruction.\n\nDefault color <code>RGB(255, 160, 0)</code> is the classic Half-Life orange, equivalent to PC cvars <code>hud_r 255 hud_g 160 hud_b 0</code>.`
+  },
+  info_hudpos:{
+    title:'Element Positioning',
+    sub:'Fixed pixel coordinates on 640×448 screen',
+    body:`Each element has its own <b>Draw()</b> with hardcoded positions. PS2 uses <b>640×448</b> resolution (NTSC).\n\n<b>Kill Feed (DeathNotice)</b> — upper right: X=420, Y=84\n<b>Ammo HUD</b> — lower right: base X=532 (= 640−108)\n<b>Geiger</b> — 6 stacked bars with individual Y: 28 → 95px\n<b>Train HUD</b> — train speed indicator: X=96, Y=128\n<b>Item Pickup</b> — item history on the right side\n<b>ISlaveHud</b> — PS2 exclusive (playable Alien Slave)`
+  },
+  info_armas:{
+    title:'Weapon Ammo & Capacity',
+    sub:'iMaxClip and iMaxAmmo1 in the ItemInfo struct',
+    body:`Each weapon fills the <code>ItemInfo</code> struct via <b>GetItemInfo()</b>:\n\n<b>iMaxClip</b> (offset +28) — rounds per magazine or load\n<b>iMaxAmmo1</b> (offset +12) — maximum carried in inventory\n\nBoth are 1-byte ADDIU immediates (0–255). Gauss and Egon <b>share</b> the same energy pool — editing one affects both.`
+  },
+  info_firerate:{
+    title:'Fire Rate',
+    sub:'IEEE 754 float — LUI + ORI instruction pair',
+    body:`Fire rate is an <b>IEEE 754 float</b> split across two MIPS instructions:\n<code>LUI $at, hi16</code> → loads the high part\n<code>ORI $at, $at, lo16</code> → completes the value, sends to FPU\n\nEditing requires changing <b>all 4 bytes of the ORI instruction</b> (little-endian). Lower = faster. Below 0.05s may cause animation bugs.`
+  },
+  info_reload:{
+    title:'Reload Time',
+    sub:'Float via LUI-only instruction (no ORI)',
+    body:`Reload time is a <b>hardcoded float</b> in each weapon's <code>Reload()</code>. Uses only <code>LUI</code>, no ORI (float low part = 0).\n\nTo edit: change the <b>first 2 bytes</b> of the LUI instruction.\n\n<b>Crossbow</b>: 4.5s  ·  <b>Python</b>: 4.0s  ·  <b>RPG</b>: 3.5s\n<b>Shotgun</b>: 2.0s (per shell)  ·  <b>MP5/Glock/Egon</b>: 1.5s`
+  },
+  info_gameplay:{
+    title:'General gameplay parameters',
+    sub:'FOV, health, violence, corpses, monsters',
+    body:`Gameplay constants hardcoded in the ELF — modifiable via ADDIU:\n\n<b>FOV (field of view)</b>: default 90°. Increasing gives peripheral vision, decreasing creates a zoom effect. Values above 150° cause distortion.\n<b>Starting health</b>: HP Gordon starts each map with. Default: 100.\n<b>Gibs / Blood</b>: individual flags for body parts (gibs), human blood, and alien fluid. Disabling improves performance and saves memory.\n<b>Corpse queue</b>: how many bodies stay in the scene simultaneously. Default: 2. Increasing may slow down intense combat.\n<b>Monsters in MP</b>: allows NPCs in multiplayer/coop mode. Default: 1 (enabled).`
+  },
+  info_viewmodel:{
+    title:'Weapon Bob & Sway',
+    sub:'Weapon bobbing and inertia in V_CalcBob',
+    body:`Half-Life uses two functions to animate the weapon on screen:\n\n<b>V_CalcBob</b>: computes vertical/horizontal bobbing while walking. The <b>0.3</b> and <b>0.7</b> factors are hardcoded in the ELF .text. Zeroing them removes all bob.\n\n<b>Weapon Sway</b>: weapon inertia when turning. Controlled by <b>sway_scale = 0.5</b>, also hardcoded. Zeroing removes lag entirely.`
+  },
+  info_snark:{
+    title:'CSqueakGrenade',
+    sub:'Gearbox modifications vs PC version',
+    body:`The Snark is a living grenade that chases enemies. Gearbox doubled the PC lifetime:\n\n<b>Lifetime</b>: PC=15s → PS2=30s before self-destruct\n<b>Clip</b>: PS2 added a clip of 5 (PC used WEAPON_NOCLIP=-1)\n\n<b>NOP A+B</b>: removes ammo consumption on throw. NOP in MIPS = <code>0x00000000</code>.\n\nLifetime 32767 ≈ 9 hours (effectively infinite).`
+  },
+  info_rede:{
+    title:'WON + DEV9 Bypass',
+    sub:'Enable connect without online authentication',
+    body:`HL PS2 requires two systems before accepting the <code>connect</code> command:\n\n<b>DEV9</b> — PS2 network adapter (PCSX2 needs it configured)\n<b>WON</b> — Valve authentication server, shut down in 2004\n\nWithout both, the command silently does nothing.\n\n<b>Patch 1 (network bypass)</b>: removes DEV9 check. Game attempts to send the packet even without the adapter configured in PCSX2.\n<b>Patch 2 (WON state bypass)</b>: ignores WON authentication state check.\n<b>Patch 3 (WON type bypass)</b>: ignores the requirement that auth type equals WON (val=3).\n\nWith all 3 patches, <code>connect IP:27015</code> works against any GoldSrc server — including this session's <code>hl_ps2_server.py</code>.`
+  },
+  info_memoria:{
+    title:'Memory Limits',
+    sub:'PS2 has 32 MB RAM — crashes on large maps',
+    body:`On large maps, static buffers can fill and crash the game:\n\n<b>MAX_DECALS (512)</b> — bullet marks on geometry. Reducing to 128 frees ~1 MB.\n<b>MAX_TEMP_ENTS (350)</b> — temporary particles (blood, sparks). Reducing to 150 eases memory spikes.\n<b>MAX_EDICTS (676)</b> — simultaneous entities. Increasing helps dense maps but uses more RAM.`
+  },
+  info_intro:{
+    title:'Intro Movie — Opening video',
+    sub:'SLUS_209.28 (final release) only · requires MOVIES\\GEARBOX.PSS on disc',
+    body:`In the final release (<b>SLUS_209.28</b>), Gearbox removed the intro video that existed in the demo (<b>SLUS_200.66</b>). Two elements were stripped:\n\n<b>1 — Path string</b>: the slot at <code>0x003A0F70</code> that held <code>cdrom0:\\MOVIES\\GEARBOX.PSS</code> was zeroed out. The engine can no longer locate the file.\n\n<b>2 — Startup call</b>: the init wrapper at <code>0x002E3A78</code> called <code>PlayMovie()</code> before <code>GameInit()</code>. The two instructions responsible (<code>LUI r2 / LW r2</code>, dead code with no other use) were left without the call.\n\n<b>These two patches restore exactly those elements.</b> For it to work, the file <code>MOVIES\\GEARBOX.PSS</code> must exist on disc — you can use the one from the DEMO as source.`
+  },
+}};
+
+// ════════════════════════════════════════════════════════
+// PATCHES
+// ════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════
+const PATCHES=[
+  // HUD COLORS
+  {id:'hud_r',cat:'hud',n:{pt:'HUD — Vermelho (R)',en:'HUD — Red (R)'},d:{pt:'Canal R da cor global da HUD. Padrão: 255.',en:'Global HUD color R channel. Default: 255.'},offset:0x000E59FC,orig:[0xFF,0x00,0x04,0x24],edit:[{lp:'R (0–255)',le:'R (0–255)',k:'v',byte:0,min:0,max:255,def:255}]},
+  {id:'hud_g',cat:'hud',n:{pt:'HUD — Verde (G)',en:'HUD — Green (G)'},d:{pt:'Canal G da cor global da HUD. Padrão: 160.',en:'Global HUD color G channel. Default: 160.'},offset:0x000E5A08,orig:[0xA0,0x00,0x04,0x24],edit:[{lp:'G (0–255)',le:'G (0–255)',k:'v',byte:0,min:0,max:255,def:160}]},
+  {id:'hud_b',cat:'hud',n:{pt:'HUD — Azul (B)',en:'HUD — Blue (B)'},d:{pt:'Canal B (hardcoded via DADDU — efeito limitado). Padrão: 0.',en:'B channel (hardcoded via DADDU — limited effect). Default: 0.'},offset:0x000E5A14,orig:[0x2D,0x20,0x00,0x00],edit:[{lp:'B (0–255)',le:'B (0–255)',k:'v',byte:0,min:0,max:255,def:0}]},
+  {id:'flash_y',cat:'hud',n:{pt:'Flashlight — Offset Y',en:'Flashlight — Y Offset'},d:{pt:'Ajuste vertical da flashlight na HUD (signed). Padrão: +24.',en:'Flashlight HUD vertical offset (signed). Default: +24.'},offset:0x0001922C,orig:[0x18,0x00,0x73,0x24],edit:[{lp:'Y offset (px)',le:'Y offset (px)',k:'v',byte16s:true,min:-128,max:127,def:24}]},
+  {id:'flash_x',cat:'hud',n:{pt:'Flashlight — Offset X',en:'Flashlight — X Offset'},d:{pt:'Ajuste horizontal da flashlight (signed 16-bit). Padrão: -8.',en:'Flashlight HUD horizontal offset (signed 16-bit). Default: -8.'},offset:0x00019220,orig:[0xF8,0xFF,0xF2,0x24],edit:[{lp:'X offset (px)',le:'X offset (px)',k:'v',byte16:true,min:-640,max:640,def:-8}]},
+  // HUD POSITIONS
+  {id:'dn_x',cat:'hudpos',n:{pt:'Kill Feed — X',en:'Kill Feed — X'},d:{pt:'Posição X do kill feed (0=esq, 640=dir). Padrão: 420.',en:'Kill feed X position (0=left, 640=right). Default: 420.'},offset:0x000184B8,orig:[0xA4,0x00,0x07,0x24],edit:[{lp:'X (px)',le:'X (px)',k:'v',byte16:true,min:0,max:640,def:420}]},
+  {id:'dn_y',cat:'hudpos',n:{pt:'Kill Feed — Y',en:'Kill Feed — Y'},d:{pt:'Posição Y do kill feed (0=topo). Padrão: 84.',en:'Kill feed Y position (0=top). Default: 84.'},offset:0x0001858C,orig:[0x54,0x00,0x07,0x24],edit:[{lp:'Y (px)',le:'Y (px)',k:'v',byte:0,min:0,max:255,def:84}]},
+  {id:'dn_lh',cat:'hudpos',n:{pt:'Kill Feed — Altura de linha',en:'Kill Feed — Line Height'},d:{pt:'Espaçamento vertical entre entradas do kill feed. Padrão: 24.',en:'Vertical spacing between kill feed entries. Default: 24.'},offset:0x000189C4,orig:[0x18,0x00,0x07,0x24],edit:[{lp:'Altura (px)',le:'Height (px)',k:'v',byte:0,min:8,max:64,def:24}]},
+  {id:'dn_mg',cat:'hudpos',n:{pt:'Kill Feed — Margem',en:'Kill Feed — Margin'},d:{pt:'Margem entre entradas do kill feed. Padrão: 20.',en:'Margin between kill feed entries. Default: 20.'},offset:0x000185F8,orig:[0x14,0x00,0x07,0x24],edit:[{lp:'Margem (px)',le:'Margin (px)',k:'v',byte:0,min:0,max:64,def:20}]},
+  {id:'ammo_x',cat:'hudpos',n:{pt:'Ammo HUD — X',en:'Ammo HUD — X'},d:{pt:'Posição X base do display de munição (uint16). Padrão: 532 = 640−108.',en:'Ammo display base X position (uint16). Default: 532 = 640−108.'},offset:0x000177C4,orig:[0x14,0x02,0x0B,0x24],edit:[{lp:'X (px)',le:'X (px)',k:'v',byte16:true,min:0,max:640,def:532}]},
+  {id:'ammo_y',cat:'hudpos',n:{pt:'Ammo HUD — Margem Y',en:'Ammo HUD — Y Margin'},d:{pt:'Margem inferior do display de munição. Padrão: 24.',en:'Ammo display bottom margin. Default: 24.'},offset:0x00017960,orig:[0x18,0x00,0x06,0x24],edit:[{lp:'Margem Y (px)',le:'Y margin (px)',k:'v',byte:0,min:0,max:200,def:24}]},
+  {id:'bat_mg',cat:'hudpos',n:{pt:'Battery HUD — Margem',en:'Battery HUD — Margin'},d:{pt:'Margem lateral da barra de suit/bateria. Padrão: 6.',en:'Suit/battery bar side margin. Default: 6.'},offset:0x00016AB8,orig:[0x06,0x00,0x06,0x24],edit:[{lp:'Margem (px)',le:'Margin (px)',k:'v',byte:0,min:0,max:64,def:6}]},
+  {id:'gei_y1',cat:'hudpos',n:{pt:'Geiger — Nível 1 Y',en:'Geiger — Level 1 Y'},d:{pt:'Y da barra de radiação nível 1 (mais fraco). Padrão: 28.',en:'Radiation bar level 1 Y (weakest). Default: 28.'},offset:0x000195E4,orig:[0x1C,0x00,0x06,0x24],edit:[{lp:'Y (px)',le:'Y (px)',k:'v',byte:0,min:0,max:447,def:28}]},
+  {id:'gei_y2',cat:'hudpos',n:{pt:'Geiger — Nível 2 Y',en:'Geiger — Level 2 Y'},d:{pt:'Y da barra de radiação nível 2. Padrão: 40.',en:'Radiation bar level 2 Y. Default: 40.'},offset:0x0001961C,orig:[0x28,0x00,0x06,0x24],edit:[{lp:'Y (px)',le:'Y (px)',k:'v',byte:0,min:0,max:447,def:40}]},
+  {id:'gei_y3',cat:'hudpos',n:{pt:'Geiger — Nível 3 Y',en:'Geiger — Level 3 Y'},d:{pt:'Y da barra de radiação nível 3. Padrão: 60.',en:'Radiation bar level 3 Y. Default: 60.'},offset:0x00019654,orig:[0x3C,0x00,0x06,0x24],edit:[{lp:'Y (px)',le:'Y (px)',k:'v',byte:0,min:0,max:447,def:60}]},
+  {id:'gei_y4',cat:'hudpos',n:{pt:'Geiger — Nível 4 Y',en:'Geiger — Level 4 Y'},d:{pt:'Y da barra de radiação nível 4. Padrão: 80.',en:'Radiation bar level 4 Y. Default: 80.'},offset:0x0001968C,orig:[0x50,0x00,0x06,0x24],edit:[{lp:'Y (px)',le:'Y (px)',k:'v',byte:0,min:0,max:447,def:80}]},
+  {id:'gei_y5',cat:'hudpos',n:{pt:'Geiger — Nível 5 Y',en:'Geiger — Level 5 Y'},d:{pt:'Y da barra de radiação nível 5. Padrão: 90.',en:'Radiation bar level 5 Y. Default: 90.'},offset:0x000196B8,orig:[0x5A,0x00,0x06,0x24],edit:[{lp:'Y (px)',le:'Y (px)',k:'v',byte:0,min:0,max:447,def:90}]},
+  {id:'gei_y6',cat:'hudpos',n:{pt:'Geiger — Nível 6 Y (máx)',en:'Geiger — Level 6 Y (max)'},d:{pt:'Y da barra de radiação nível 6 — zona de perigo. Padrão: 95.',en:'Radiation bar level 6 Y — danger zone. Default: 95.'},offset:0x000196DC,orig:[0x5F,0x00,0x06,0x24],edit:[{lp:'Y (px)',le:'Y (px)',k:'v',byte:0,min:0,max:447,def:95}]},
+  {id:'trn_x',cat:'hudpos',n:{pt:'Train HUD — X',en:'Train HUD — X'},d:{pt:'Posição X do indicador do trem. Padrão: 96.',en:'Train speed indicator X. Default: 96.'},offset:0x00021098,orig:[0x60,0x00,0x07,0x24],edit:[{lp:'X (px)',le:'X (px)',k:'v',byte:0,min:0,max:639,def:96}]},
+  {id:'trn_y',cat:'hudpos',n:{pt:'Train HUD — Y',en:'Train HUD — Y'},d:{pt:'Posição Y do indicador do trem. Padrão: 128.',en:'Train speed indicator Y. Default: 128.'},offset:0x000210A8,orig:[0x80,0x00,0x08,0x24],edit:[{lp:'Y (px)',le:'Y (px)',k:'v',byte:0,min:0,max:447,def:128}]},
+  {id:'hist_x',cat:'hudpos',n:{pt:'Item Pickup — Offset X',en:'Item Pickup — X Offset'},d:{pt:'Offset X da direita para o histórico de itens. Padrão: 144.',en:'Right-side X offset for item history. Default: 144.'},offset:0x00012914,orig:[0x90,0x00,0x08,0x24],edit:[{lp:'Offset X (px)',le:'X offset (px)',k:'v',byte:0,min:0,max:255,def:144}]},
+  {id:'hist_y',cat:'hudpos',n:{pt:'Item Pickup — Y inicial',en:'Item Pickup — Start Y'},d:{pt:'Posição Y inicial do histórico. Padrão: 128.',en:'Item history starting Y. Default: 128.'},offset:0x00012998,orig:[0x80,0x00,0x08,0x24],edit:[{lp:'Y (px)',le:'Y (px)',k:'v',byte:0,min:0,max:447,def:128}]},
+  {id:'hist_yl',cat:'hudpos',n:{pt:'Item Pickup — Y limite',en:'Item Pickup — Y Limit'},d:{pt:'Y máximo do histórico. Padrão: 200.',en:'Item history maximum Y. Default: 200.'},offset:0x000129A0,orig:[0xC8,0x00,0x08,0x24],edit:[{lp:'Y limite (px)',le:'Y limit (px)',k:'v',byte:0,min:0,max:447,def:200}]},
+  {id:'isl_mg',cat:'hudpos',n:{pt:'ISlaveHud — Margem [PS2]',en:'ISlaveHud — Margin [PS2]'},d:{pt:'Margem do HUD do Alien Slave (exclusivo PS2). Padrão: 12.',en:'Alien Slave HUD margin (PS2 exclusive). Default: 12.'},offset:0x00021C80,orig:[0x0C,0x00,0x07,0x24],edit:[{lp:'Margem (px)',le:'Margin (px)',k:'v',byte:0,min:0,max:64,def:12}]},
+  {id:'isl_sc',cat:'hudpos',n:{pt:'ISlaveHud — Escala [PS2]',en:'ISlaveHud — Scale [PS2]'},d:{pt:'Escala do HUD do Alien Slave (%). Padrão: 100.',en:'Alien Slave HUD scale (%). Default: 100.'},offset:0x00021D5C,orig:[0x64,0x00,0x07,0x24],edit:[{lp:'Escala (1–255)',le:'Scale (1–255)',k:'v',byte:0,min:1,max:255,def:100}]},
+  // WEAPONS
+  {id:'glock_clip',cat:'armas',n:{pt:'Glock — Clip',en:'Glock — Clip'},d:{pt:'Balas por pente. Padrão: 17.',en:'Rounds per mag. Default: 17.'},offset:0x0007AF44,orig:[0x12,0x00,0x07,0x24],edit:[{lp:'Clip',le:'Clip',k:'v',byte:0,min:1,max:255,def:18}]},
+  {id:'glock_ammo',cat:'armas',n:{pt:'Glock — Max ammo',en:'Glock — Max ammo'},d:{pt:'Máximo de 9mm. Padrão: 250.',en:'Max 9mm ammo. Default: 250.'},offset:0x0007AF34,orig:[0x97,0x00,0x08,0x24],edit:[{lp:'Max ammo',le:'Max ammo',k:'v',byte:0,min:1,max:255,def:151}]},
+  {id:'mp5_clip',cat:'armas',n:{pt:'MP5 — Clip',en:'MP5 — Clip'},d:{pt:'Balas por pente do MP5. Padrão: 50.',en:'MP5 rounds per mag. Default: 50.'},offset:0x000AAF94,orig:[0x32,0x00,0x06,0x24],edit:[{lp:'Clip',le:'Clip',k:'v',byte:0,min:1,max:255,def:50}]},
+  {id:'mp5_ammo',cat:'armas',n:{pt:'MP5 — Max ammo',en:'MP5 — Max ammo'},d:{pt:'Máximo de 9mm para MP5. Padrão: 250.',en:'Max 9mm for MP5. Default: 250.'},offset:0x000AAF90,orig:[0xFA,0x00,0x08,0x24],edit:[{lp:'Max ammo',le:'Max ammo',k:'v',byte:0,min:1,max:255,def:250}]},
+  {id:'python_clip',cat:'armas',n:{pt:'Python — Clip',en:'Python — Clip'},d:{pt:'Balas por cilindro. Padrão: 6.',en:'Rounds per cylinder. Default: 6.'},offset:0x000D483C,orig:[0x06,0x00,0x07,0x24],edit:[{lp:'Clip',le:'Clip',k:'v',byte:0,min:1,max:255,def:6}]},
+  {id:'python_ammo',cat:'armas',n:{pt:'Python — Max ammo',en:'Python — Max ammo'},d:{pt:'Máximo de .357. Padrão: 36.',en:'Max .357 ammo. Default: 36.'},offset:0x000D4840,orig:[0x24,0x00,0x08,0x24],edit:[{lp:'Max ammo',le:'Max ammo',k:'v',byte:0,min:1,max:255,def:36}]},
+  {id:'shotgun_clip',cat:'armas',n:{pt:'Shotgun — Clip',en:'Shotgun — Clip'},d:{pt:'Shells por câmara. Padrão: 8.',en:'Shells per load. Default: 8.'},offset:0x000E3FE4,orig:[0x06,0x00,0x06,0x24],edit:[{lp:'Clip',le:'Clip',k:'v',byte:0,min:1,max:255,def:6}]},
+  {id:'shotgun_ammo',cat:'armas',n:{pt:'Shotgun — Max ammo',en:'Shotgun — Max ammo'},d:{pt:'Máximo de buckshot. Padrão: 125.',en:'Max buckshot. Default: 125.'},offset:0x000E3FDC,orig:[0x1E,0x00,0x08,0x24],edit:[{lp:'Max ammo',le:'Max ammo',k:'v',byte:0,min:1,max:255,def:30}]},
+  {id:'xbow_clip',cat:'armas',n:{pt:'Crossbow — Clip',en:'Crossbow — Clip'},d:{pt:'Bolts por carga. Padrão: 5.',en:'Bolts per load. Default: 5.'},offset:0x000563C4,orig:[0x01,0x00,0x07,0x24],edit:[{lp:'Clip',le:'Clip',k:'v',byte:0,min:1,max:255,def:1}]},
+  {id:'xbow_ammo',cat:'armas',n:{pt:'Crossbow — Max ammo',en:'Crossbow — Max ammo'},d:{pt:'Máximo de bolts. Padrão: 50.',en:'Max bolts. Default: 50.'},offset:0x000563B8,orig:[0x0A,0x00,0x08,0x24],edit:[{lp:'Max ammo',le:'Max ammo',k:'v',byte:0,min:1,max:255,def:10}]},
+  {id:'rpg_clip',cat:'armas',n:{pt:'RPG — Clip',en:'RPG — Clip'},d:{pt:'Foguetes por carga. Padrão: 1.',en:'Rockets per load. Default: 1.'},offset:0x000D9D74,orig:[0x01,0x00,0x07,0x24],edit:[{lp:'Clip',le:'Clip',k:'v',byte:0,min:1,max:255,def:1}]},
+  {id:'rpg_ammo',cat:'armas',n:{pt:'RPG — Max ammo',en:'RPG — Max ammo'},d:{pt:'Máximo de foguetes. Padrão: 5.',en:'Max rockets. Default: 5.'},offset:0x000D9D64,orig:[0x05,0x00,0x08,0x24],edit:[{lp:'Max ammo',le:'Max ammo',k:'v',byte:0,min:1,max:255,def:5}]},
+  {id:'gauss_ammo',cat:'armas',n:{pt:'Gauss/Egon — Cells',en:'Gauss/Egon — Cells'},d:{pt:'Cells de energia compartilhadas. Padrão: 160.',en:'Shared energy cells. Default: 160.'},offset:0x0001738C,orig:[0xA0,0x00,0x08,0x24],edit:[{lp:'Max cells',le:'Max cells',k:'v',byte:0,min:1,max:255,def:160}]},
+  // FIRE RATE
+  {id:'fr_glock',cat:'firerate',n:{pt:'Fire Rate — Glock',en:'Fire Rate — Glock'},d:{pt:'Delay entre tiros da Glock (s). Padrão: 0.10.',en:'Glock fire delay (s). Default: 0.10.'},offset:0x0003A618,orig:[0xCD,0xCC,0xCC,0x3D],float:true,edit:[{lp:'Segundos',le:'Seconds',k:'v',min:0.05,max:2,step:0.05,def:0.1}]},
+  {id:'fr_mp5',cat:'firerate',n:{pt:'Fire Rate — MP5',en:'Fire Rate — MP5'},d:{pt:'Delay entre tiros do MP5 (s). Padrão: 0.10.',en:'MP5 fire delay (s). Default: 0.10.'},offset:0x000236E8,orig:[0xCD,0xCC,0xCC,0x3D],float:true,edit:[{lp:'Segundos',le:'Seconds',k:'v',min:0.05,max:2,step:0.05,def:0.1}]},
+  {id:'fr_python',cat:'firerate',n:{pt:'Fire Rate — Python',en:'Fire Rate — Python'},d:{pt:'Delay entre tiros do Python (s). Padrão: 0.30.',en:'Python fire delay (s). Default: 0.30.'},offset:0x0006DEB0,orig:[0x9A,0x99,0x99,0x3E],float:true,edit:[{lp:'Segundos',le:'Seconds',k:'v',min:0.05,max:2,step:0.05,def:0.3}]},
+  {id:'fr_xbow',cat:'firerate',n:{pt:'Fire Rate — Crossbow',en:'Fire Rate — Crossbow'},d:{pt:'Delay entre tiros da Crossbow (s). Padrão: 0.10.',en:'Crossbow fire delay (s). Default: 0.10.'},offset:0x000572A8,orig:[0xCD,0xCC,0xCC,0x3D],float:true,edit:[{lp:'Segundos',le:'Seconds',k:'v',min:0.05,max:2,step:0.05,def:0.1}]},
+  {id:'fr_shotgun',cat:'firerate',n:{pt:'Fire Rate — Shotgun',en:'Fire Rate — Shotgun'},d:{pt:'Delay entre tiros da Shotgun (s). Padrão: 0.30.',en:'Shotgun fire delay (s). Default: 0.30.'},offset:0x0009EA90,orig:[0x9A,0x99,0x99,0x3E],float:true,edit:[{lp:'Segundos',le:'Seconds',k:'v',min:0.05,max:2,step:0.05,def:0.3}]},
+  {id:'fr_rpg',cat:'firerate',n:{pt:'Fire Rate — RPG',en:'Fire Rate — RPG'},d:{pt:'Delay entre tiros do RPG (s). Padrão: 0.40.',en:'RPG fire delay (s). Default: 0.40.'},offset:0x000C958C,orig:[0xCD,0xCC,0xCC,0x3E],float:true,edit:[{lp:'Segundos',le:'Seconds',k:'v',min:0.05,max:2,step:0.05,def:0.4}]},
+  {id:'fr_egon',cat:'firerate',n:{pt:'Fire Rate — Egon',en:'Fire Rate — Egon'},d:{pt:'Delay do loop de dano do Egon (s). Padrão: 0.60.',en:'Egon damage loop delay (s). Default: 0.60.'},offset:0x00064928,orig:[0x9A,0x99,0x19,0x3F],float:true,edit:[{lp:'Segundos',le:'Seconds',k:'v',min:0.05,max:2,step:0.05,def:0.6}]},
+  {id:'fr_gauss',cat:'firerate',n:{pt:'Fire Rate — Gauss',en:'Fire Rate — Gauss'},d:{pt:'Delay de carga do Gauss (s). Padrão: 0.15.',en:'Gauss charge delay (s). Default: 0.15.'},offset:0x00075684,orig:[0x9A,0x99,0x19,0x3E],float:true,edit:[{lp:'Segundos',le:'Seconds',k:'v',min:0.05,max:2,step:0.05,def:0.15}]},
+  // RELOAD
+  {id:'rl_glock',cat:'reload',n:{pt:'Reload — Glock',en:'Reload — Glock'},d:{pt:'Tempo de recarga da Glock (s). Padrão: 1.5.',en:'Glock reload time (s). Default: 1.5.'},offset:0x00038174,orig:[0xC0,0x3F,0x01,0x3C],lui:true,edit:[{lp:'Segundos',le:'Seconds',k:'v',min:0.5,max:8,step:0.5,def:1.5}]},
+  {id:'rl_mp5',cat:'reload',n:{pt:'Reload — MP5',en:'Reload — MP5'},d:{pt:'Tempo de recarga do MP5 (s). Padrão: 1.5.',en:'MP5 reload time (s). Default: 1.5.'},offset:0x000292D0,orig:[0xC0,0x3F,0x01,0x3C],lui:true,edit:[{lp:'Segundos',le:'Seconds',k:'v',min:0.5,max:8,step:0.5,def:1.5}]},
+  {id:'rl_python',cat:'reload',n:{pt:'Reload — Python',en:'Reload — Python'},d:{pt:'Tempo de recarga do Python (s). Padrão: 4.0.',en:'Python reload time (s). Default: 4.0.'},offset:0x00071DDC,orig:[0x80,0x40,0x01,0x3C],lui:true,edit:[{lp:'Segundos',le:'Seconds',k:'v',min:0.5,max:8,step:0.5,def:4.0}]},
+  {id:'rl_shotgun',cat:'reload',n:{pt:'Reload — Shotgun',en:'Reload — Shotgun'},d:{pt:'Tempo de bombeamento da Shotgun (s). Padrão: 2.0.',en:'Shotgun pump reload time (s). Default: 2.0.'},offset:0x0009E930,orig:[0x00,0x40,0x01,0x3C],lui:true,edit:[{lp:'Segundos',le:'Seconds',k:'v',min:0.5,max:8,step:0.5,def:2.0}]},
+  {id:'rl_xbow',cat:'reload',n:{pt:'Reload — Crossbow',en:'Reload — Crossbow'},d:{pt:'Tempo de recarga da Crossbow (s). Padrão: 4.5.',en:'Crossbow reload time (s). Default: 4.5.'},offset:0x0005731C,orig:[0x90,0x40,0x01,0x3C],lui:true,edit:[{lp:'Segundos',le:'Seconds',k:'v',min:0.5,max:8,step:0.5,def:4.5}]},
+  {id:'rl_rpg',cat:'reload',n:{pt:'Reload — RPG',en:'Reload — RPG'},d:{pt:'Tempo de recarga do RPG (s). Padrão: 3.5.',en:'RPG reload time (s). Default: 3.5.'},offset:0x000CAC00,orig:[0x60,0x40,0x01,0x3C],lui:true,edit:[{lp:'Segundos',le:'Seconds',k:'v',min:0.5,max:8,step:0.5,def:3.5}]},
+  {id:'rl_gauss',cat:'reload',n:{pt:'Reload — Gauss',en:'Reload — Gauss'},d:{pt:'Tempo de spin-up do Gauss (s). Padrão: 4.0.',en:'Gauss spin-up time (s). Default: 4.0.'},offset:0x000752DC,orig:[0x80,0x40,0x01,0x3C],lui:true,edit:[{lp:'Segundos',le:'Seconds',k:'v',min:0.5,max:8,step:0.5,def:4.0}]},
+  {id:'rl_egon',cat:'reload',n:{pt:'Reload — Egon',en:'Reload — Egon'},d:{pt:'Tempo de deploy do Egon (s). Padrão: 1.5.',en:'Egon deploy time (s). Default: 1.5.'},offset:0x000647D8,orig:[0xC0,0x3F,0x01,0x3C],lui:true,edit:[{lp:'Segundos',le:'Seconds',k:'v',min:0.5,max:8,step:0.5,def:1.5}]},
+  // GAMEPLAY
+  {id:'fov',     cat:'gameplay',n:{pt:'Campo de Visão (FOV)',en:'Field of View (FOV)'},
+   d:{pt:'FOV padrão do jogo. Padrão: 90°. Valores maiores = mais periférico.',en:'Default field of view. Default: 90°. Higher = wider.'},
+   offset:0x0001b008,orig:[0x5A,0x00,0x02,0x24],edit:[{lp:'FOV (graus)',le:'FOV (degrees)',k:'v',byte:0,min:60,max:170,def:90}]},
+  {id:'hlth',    cat:'gameplay',n:{pt:'Saúde inicial do jogador',en:'Player starting health'},
+   d:{pt:'Saúde com que Gordon começa cada mapa. Padrão: 100.',en:'Health Gordon starts each map with. Default: 100.'},
+   offset:0x000198d8,orig:[0x64,0x00,0x02,0x24],edit:[{lp:'Saúde (1–255)',le:'Health (1–255)',k:'v',byte:0,min:1,max:255,def:100}]},
+  {id:'gibs',    cat:'gameplay',n:{pt:'Gibs humanos',en:'Human gibs'},
+   d:{pt:'Ativa/desativa pedaços de corpo ao matar humanos (1=on, 0=off).',en:'Toggle human body gibs on kill (1=on, 0=off).'},
+   offset:0x0004a804,orig:[0x01,0x00,0x11,0x24],edit:[{lp:'On/Off',le:'On/Off',k:'v',byte:0,min:0,max:1,def:1}]},
+  {id:'hblood',  cat:'gameplay',n:{pt:'Sangue humano',en:'Human blood'},
+   d:{pt:'Ativa/desativa sangue de inimigos humanos (1=on, 0=off).',en:'Toggle human enemy blood (1=on, 0=off).'},
+   offset:0x00109588,orig:[0x01,0x00,0x02,0x24],edit:[{lp:'On/Off',le:'On/Off',k:'v',byte:0,min:0,max:1,def:1}]},
+  {id:'ablood',  cat:'gameplay',n:{pt:'Sangue alienígena',en:'Alien blood'},
+   d:{pt:'Ativa/desativa sangue/fluido de inimigos alienígenas (1=on, 0=off).',en:'Toggle alien fluid/blood (1=on, 0=off).'},
+   offset:0x001095b0,orig:[0x01,0x00,0x02,0x24],edit:[{lp:'On/Off',le:'On/Off',k:'v',byte:0,min:0,max:1,def:1}]},
+  {id:'bodyq',   cat:'gameplay',n:{pt:'Fila de cadáveres',en:'Corpse queue'},
+   d:{pt:'Máximo de cadáveres simultâneos na cena. Padrão: 2.',en:'Maximum simultaneous corpses in the scene. Default: 2.'},
+   offset:0x0008d0e4,orig:[0x02,0x00,0x12,0x24],edit:[{lp:'Cadáveres (1–10)',le:'Corpses (1–10)',k:'v',byte:0,min:1,max:10,def:2}]},
+  {id:'allowm',  cat:'gameplay',n:{pt:'Monstros em Multiplayer',en:'Monsters in Multiplayer'},
+   d:{pt:'Permite monstros em modo multiplayer/coop (1=sim, 0=não).',en:'Allow monsters in multiplayer/coop mode (1=yes, 0=no).'},
+   offset:0x00053edc,orig:[0x01,0x00,0x02,0x24],edit:[{lp:'On/Off',le:'On/Off',k:'v',byte:0,min:0,max:1,def:1}]},
+
+  // VIEWMODEL
+  // Bob desativado: zera fatores 0.3 e 0.7 da fórmula V_CalcBob
+  {id:'bob_off', cat:'viewmodel',n:{pt:'Desativar Weapon Bob',en:'Disable Weapon Bob'},
+   d:{pt:'Remove o balanço da arma ao caminhar. Zera os fatores 0.3 e 0.7 hardcoded em V_CalcBob.',en:'Removes weapon bobbing while walking. Zeroes the 0.3 and 0.7 factors hardcoded in V_CalcBob.'},
+   offset:0x0001a268,orig:[0x99,0x3E,0x01,0x3C],patch:[0x00,0x00,0x01,0x3C]},
+  {id:'bob_off2',cat:'viewmodel',n:{pt:'Desativar Weapon Bob (fator 2)',en:'Disable Weapon Bob (factor 2)'},
+   d:{pt:'Segundo fator do bob (0.7). Aplicar junto com bob_off para desativar completamente.',en:'Second bob factor (0.7). Apply with bob_off to fully disable.'},
+   offset:0x000195b4,orig:[0x33,0x3F,0x01,0x3C],patch:[0x00,0x00,0x01,0x3C]},
+  {id:'bob_str', cat:'viewmodel',n:{pt:'Bob intenso (fator 1: 0.3→0.9)',en:'Strong bob (factor 1: 0.3→0.9)'},
+   d:{pt:'Aumenta o fator 1 do bob de 0.3 para 0.9 — balanço 3x mais intenso.',en:'Increases bob factor 1 from 0.3 to 0.9 — 3x more pronounced bobbing.'},
+   offset:0x0001a268,orig:[0x99,0x3E,0x01,0x3C],patch:[0x66,0x3F,0x01,0x3C]},
+  {id:'bob_str2',cat:'viewmodel',n:{pt:'Bob intenso (fator 2: 0.7→0.9)',en:'Strong bob (factor 2: 0.7→0.9)'},
+   d:{pt:'Aumenta o fator 2 do bob de 0.7 para 0.9.',en:'Increases bob factor 2 from 0.7 to 0.9.'},
+   offset:0x000195b4,orig:[0x33,0x3F,0x01,0x3C],patch:[0x66,0x3F,0x01,0x3C]},
+  {id:'sway_off',cat:'viewmodel',n:{pt:'Desativar Weapon Sway',en:'Disable Weapon Sway'},
+   d:{pt:'Remove o atraso/balanceio lateral da arma ao olhar em volta (sway_scale 0.5→0.0).',en:'Removes the weapon lag/sway when looking around (sway_scale 0.5→0.0).'},
+   offset:0x001db08c,orig:[0xFF,0x3E,0x02,0x3C],patch:[0x00,0x00,0x02,0x3C]},
+  {id:'sway_str',cat:'viewmodel',n:{pt:'Sway intenso (0.5→0.9)',en:'Strong sway (0.5→0.9)'},
+   d:{pt:'Aumenta o sway da arma de 0.5 para 0.9 — mais inércia ao virar.',en:'Increases weapon sway from 0.5 to 0.9 — more inertia when turning.'},
+   offset:0x001db08c,orig:[0xFF,0x3E,0x02,0x3C],patch:[0x66,0x3F,0x02,0x3C]},
+
+  // SNARK
+  {id:'snk_ammo',cat:'snark',n:{pt:'Snark — Max ammo',en:'Snark — Max ammo'},d:{pt:'Máximo de Snarks carregáveis. Padrão: 15.',en:'Max Snarks carried. Default: 15.'},offset:0x000EE9F0,orig:[0xFF,0x00,0x08,0x24],edit:[{lp:'Max ammo',le:'Max ammo',k:'v',byte:0,min:1,max:255,def:255}]},
+  {id:'snk_nop1',cat:'snark',n:{pt:'Snark — NOP consumo A',en:'Snark — NOP consume A'},d:{pt:'NOPa o 1º decremento de ammo. Ativar junto com B = ammo infinita.',en:'NOPs 1st ammo decrement. Enable with B for infinite ammo.'},offset:0x000EF640,orig:[0xFF,0xFF,0x52,0x26],nop:true},
+  {id:'snk_nop2',cat:'snark',n:{pt:'Snark — NOP consumo B',en:'Snark — NOP consume B'},d:{pt:'NOPa o 2º decremento de ammo.',en:'NOPs 2nd ammo decrement.'},offset:0x000EF6A4,orig:[0xFF,0xFF,0x52,0x26],nop:true},
+  {id:'snk_life',cat:'snark',n:{pt:'Snark — Lifetime',en:'Snark — Lifetime'},d:{pt:'Segundos antes de explodir. 32767 ≈ infinito. Padrão PS2: 30s.',en:'Seconds before exploding. 32767 ≈ infinite. PS2 default: 30s.'},offset:0x000EF6C4,orig:[0xFF,0x7F,0x12,0x24],edit:[{lp:'Segundos',le:'Seconds',k:'v',byte16:true,min:1,max:32767,def:32767}]},
+  // ── REDE / CONNECT ──
+  {id:'net_init',cat:'rede',n:{pt:'Connect — bypass verificação de rede',en:'Connect — bypass network init check'},
+   d:{pt:'Remove a verificação de rede inicializada no comando connect. Permite usar connect sem DEV9 configurado no PCSX2.',
+      en:'Removes the network init check in the connect command. Allows using connect without DEV9 configured in PCSX2.'},
+   offset:0x0017D8C4,orig:[0x25,0x00,0x40,0x14],patch:[0x25,0x00,0x00,0x10]},
+  {id:'net_auth',cat:'rede',n:{pt:'Connect — bypass estado WON auth',en:'Connect — bypass WON auth state'},
+   d:{pt:'Remove a verificação do estado de autenticação WON (servidores WON desligados desde 2004).',
+      en:'Removes the WON authentication state check (WON servers shut down since 2004).'},
+   offset:0x0017D960,orig:[0x09,0x00,0x40,0x14],patch:[0x00,0x00,0x00,0x00]},
+  {id:'net_won',cat:'rede',n:{pt:'Connect — bypass tipo WON (val=3)',en:'Connect — bypass WON type check (val=3)'},
+   d:{pt:'Remove a verificação do tipo de autenticação WON. Com os 3 patches ativos o connect funciona diretamente.',
+      en:'Removes the WON auth type check. With all 3 patches active, connect works directly.'},
+   offset:0x0017D990,orig:[0x16,0x00,0x62,0x14],patch:[0x00,0x00,0x00,0x00]},
+
+  // MEMORY
+  {id:'mem_decals',cat:'memoria',n:{pt:'MAX_DECALS',en:'MAX_DECALS'},d:{pt:'Máximo de marcas de tiro. Reduzir libera RAM. Padrão: 512.',en:'Max bullet marks. Reducing frees RAM. Default: 512.'},offset:0x00163178,orig:[0x80,0x00,0x06,0x24],edit:[{lp:'Limite',le:'Limit',k:'v',byte16:true,min:32,max:512,def:128}]},
+  {id:'mem_tents',cat:'memoria',n:{pt:'MAX_TEMP_ENTS',en:'MAX_TEMP_ENTS'},d:{pt:'Máximo de efeitos temporários. Padrão: 350.',en:'Max temporary effects. Default: 350.'},offset:0x0015C090,orig:[0x96,0x00,0x06,0x24],edit:[{lp:'Limite',le:'Limit',k:'v',byte16:true,min:50,max:512,def:150}]},
+  {id:'mem_edicts',cat:'memoria',n:{pt:'MAX_EDICTS',en:'MAX_EDICTS'},d:{pt:'Máximo de entidades simultâneas. Padrão: 676.',en:'Max simultaneous entities. Default: 676.'},offset:0x00177BC8,orig:[0xA4,0x02,0x04,0x24],edit:[{lp:'Limite',le:'Limit',k:'v',byte16:true,min:256,max:1200,def:676}]},
+
+  // INTRO MOVIE (versão final SLUS_209.28)
+  // Patch 1: restaura a string do caminho do vídeo (zerада pela Gearbox na release)
+  // VA 0x003A0F70 | file 0x002A1F70 | 27 bytes + null
+  {id:'intro_str',cat:'intro',
+   n:{pt:'Intro — Restaurar caminho do vídeo',en:'Intro — Restore video path string'},
+   d:{pt:'Restaura a string "cdrom0:\\MOVIES\\GEARBOX.PSS" que a Gearbox apagou do binário da versão final. Necessário para o vídeo ser encontrado. Aplicar junto com intro_call.',
+      en:'Restores the "cdrom0:\\MOVIES\\GEARBOX.PSS" string erased by Gearbox in the final build. Required for the video to be located. Apply together with intro_call.'},
+   offset:0x002A1F70,
+   orig:[0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+         0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00],
+   patch:[0x63,0x64,0x72,0x6F,0x6D,0x30,0x3A,0x5C,0x4D,0x4F,0x56,0x49,0x45,0x53,0x5C,0x47,
+          0x45,0x41,0x52,0x42,0x4F,0x58,0x2E,0x50,0x53,0x53,0x00,0x00]},
+  // Patch 2: injeta JAL PlayMovie no wrapper de startup (substitui dead code LUI/LW r2)
+  // VA 0x002E3A78 | file 0x001E4A78 | 9 instruções MIPS reescritas
+  {id:'intro_call',cat:'intro',
+   n:{pt:'Intro — Injetar chamada no startup',en:'Intro — Inject call into startup'},
+   d:{pt:'Reescreve o wrapper de init (0x002E3A78) para chamar PlayMovie (0x00238338) antes do GameInit. Substitui dead code (LUI/LW r2 sem uso). Aplicar junto com intro_str.',
+      en:'Rewrites the init wrapper (0x002E3A78) to call PlayMovie (0x00238338) before GameInit. Replaces dead code (unused LUI/LW r2). Apply together with intro_str.'},
+   offset:0x001E4A78,
+   orig:[0x2D,0x28,0x80,0x00, 0x33,0x00,0x02,0x3C, 0xF0,0xFF,0xBD,0x27, 0xAC,0x67,0x44,0x8C,
+         0x00,0x00,0xBF,0xFF, 0x42,0x8F,0x0B,0x0C, 0x00,0x00,0x00,0x00, 0x00,0x00,0xBF,0xDF,
+         0x08,0x00,0xE0,0x03, 0x10,0x00,0xBD,0x27],
+   patch:[0xF0,0xFF,0xBD,0x27, 0x00,0x00,0xBF,0xFF, 0xCE,0xE0,0x08,0x0C, 0x2D,0x28,0x80,0x00,
+          0x42,0x8F,0x0B,0x0C, 0x00,0x00,0x00,0x00, 0x00,0x00,0xBF,0xDF, 0x08,0x00,0xE0,0x03,
+          0x10,0x00,0xBD,0x27, 0x00,0x00,0x00,0x00]},
+];
+
+// ════════════════════════════════════════════════════════
+// CATEGORIES
+// ════════════════════════════════════════════════════════
+const CATS=['all','hud','hudpos','armas','firerate','reload','gameplay','viewmodel','snark','rede','memoria','intro'];
+
+// ════════════════════════════════════════════════════════
+// APP
+// ════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════════════
+let lang='pt';
+let fileBytes=null;
+let fileName='';
+let currentCat='all';
+let infoOpen={};
+const pstate={};
+PATCHES.forEach(p=>{pstate[p.id]={on:false,val:p.edit?p.edit[0].def:null,open:false}});
+
+function L(){return I18N[lang]||I18N['pt'];}
+function t(k){const v=L()[k];return v!==undefined?v:k;}
+
+// ════════════════════════════════════════════════════════
+// PATCH BYTES — computes the output bytes for a patch
+// ════════════════════════════════════════════════════════
+function patchBytes(p){
+  // Fixed NOP (00 00 00 00)
+  if(p.nop) return [0x00,0x00,0x00,0x00];
+  // Fixed replacement bytes
+  if(p.patch) return [...p.patch];
+  // Editable patch
+  if(p.edit){
+    const e=p.edit[0];
+    const s=pstate[p.id];
+    const out=[...p.orig];
+    // Float IEEE 754 — stored in ORI instruction (little-endian 4 bytes)
+    if(p.float){
+      const v=parseFloat(s.val)||e.def;
+      const buf=new ArrayBuffer(4);new DataView(buf).setFloat32(0,v,true);
+      const bytes=new Uint8Array(buf);
+      // Only patch the ORI (low 16 bits in little-endian): bytes 0-1 change, 2-3 keep from orig
+      out[0]=bytes[0];out[1]=bytes[1];out[2]=bytes[2];out[3]=bytes[3];
+      return out;
+    }
+    // LUI-only float: value stored in high 16 bits, low 16 = 0
+    if(p.lui){
+      const v=parseFloat(s.val)||e.def;
+      const buf=new ArrayBuffer(4);new DataView(buf).setFloat32(0,v,true);
+      const bytes=new Uint8Array(buf);
+      // LUI instruction little-endian: [lo_instr_lo, lo_instr_hi, hi_float, lo_float]
+      // For LUI the float hi16 is in bytes[2-3], instr opcode/reg in bytes[0-1] from orig
+      out[0]=bytes[2];out[1]=bytes[3];// float high 16 bits
+      // keep out[2] and out[3] (opcode) from orig
+      return out;
+    }
+    // 16-bit unsigned value
+    if(e.byte16){
+      const v=Math.max(e.min,Math.min(e.max,parseInt(s.val)||e.def));
+      out[0]=v&0xFF;out[1]=(v>>8)&0xFF;
+      return out;
+    }
+    // 16-bit signed value
+    if(e.byte16s){
+      const v=Math.max(e.min,Math.min(e.max,parseInt(s.val)||e.def));
+      const u=v<0?v+65536:v;
+      out[0]=u&0xFF;out[1]=(u>>8)&0xFF;
+      return out;
+    }
+    // 8-bit value at byte index e.byte (default 0)
+    const byteIdx=e.byte||0;
+    const v=Math.max(e.min,Math.min(e.max,parseInt(s.val)||e.def));
+    out[byteIdx]=v&0xFF;
+    return out;
+  }
+  return [...p.orig];
+}
+
+function renderSidebar(){
+  const totalOn=PATCHES.filter(p=>pstate[p.id].on).length;
+  let html=`<div class="sb-top">
+  <div class="sb-section">${lang==='pt'?'Navegação':'Navigation'}</div>
+  <div class="sb-item${currentCat==='all'?' active':''}" data-cat="all">
+    <span class="sb-icon">◈</span>
+    <span class="sb-label">${t('cat_all')}</span>
+    <span class="sb-cnt">${totalOn}</span>
+  </div>
+  <div class="sb-divider"></div>
+  <div class="sb-section">${lang==='pt'?'Categorias':'Categories'}</div>`;
+  CATS.slice(1).forEach(c=>{
+    const on=PATCHES.filter(p=>p.cat===c&&pstate[p.id].on).length;
+    const total=PATCHES.filter(p=>p.cat===c).length;
+    html+=`<div class="sb-item${currentCat===c?' active':''}" data-cat="${c}">
+      <span class="sb-icon">${t('icon_'+c)}</span>
+      <span class="sb-label">${t('cat_'+c)}</span>
+      <span class="sb-cnt">${on}</span>
+    </div>`;
+  });
+  html+=`</div><div class="sb-bottom">
+    <div class="sb-stat"><span>${lang==='pt'?'Total':'Total'}</span><span><b>${PATCHES.length}</b> patches</span></div>
+    <div class="sb-stat"><span>${lang==='pt'?'Ativos':'Active'}</span><b>${totalOn}</b></div>
+  </div>`;
+  document.getElementById('sidebar').innerHTML=html;
+  document.getElementById('sidebar').querySelectorAll('.sb-item').forEach(el=>{
+    el.addEventListener('click',()=>{currentCat=el.dataset.cat;renderAll()});
+  });
+  document.getElementById('patch-count-tag').textContent=`${totalOn}/${PATCHES.length} patches`;
+}
+
+// ════════════════════════════════════════════════════════
+// RENDER
+// ════════════════════════════════════════════════════════
+const hx=b=>b.toString(16).toUpperCase().padStart(2,'0');
+
+// ════════════════════════════════════════════════════════
+// HUD VISUALIZER
+// ════════════════════════════════════════════════════════
+const VIZ_PRESETS=[
+  {n:'Padrão HL',r:255,g:160,b:0},
+  {n:'Verde',r:0,g:230,b:80},
+  {n:'Ciano',r:0,g:230,b:255},
+  {n:'Branco',r:255,g:255,b:255},
+  {n:'Azul',r:80,g:160,b:255},
+  {n:'Rosa',r:255,g:80,b:180},
+  {n:'Vermelho',r:255,g:40,b:40},
+  {n:'Roxo',r:180,g:80,b:255},
+];
+let vizOpen=true;
+let vizActivePreset=0;
+
+function getHudRGB(){
+  const pr=PATCHES.find(x=>x.id==='hud_r');
+  const pg=PATCHES.find(x=>x.id==='hud_g');
+  const pb=PATCHES.find(x=>x.id==='hud_b');
+  const R=pstate['hud_r'].on?(parseInt(pstate['hud_r'].val)||255):(pr?pr.orig[0]:255);
+  const G=pstate['hud_g'].on?(parseInt(pstate['hud_g'].val)||160):(pg?pg.orig[0]:160);
+  const B=pstate['hud_b'].on?(parseInt(pstate['hud_b'].val)||0):(pb?pb.orig[0]:0);
+  return{R:Math.max(0,Math.min(255,R)),G:Math.max(0,Math.min(255,G)),B:Math.max(0,Math.min(255,B))};
+}
+
+function toHx(v){return v.toString(16).toUpperCase().padStart(2,'0')}
+
+function drawVizCanvas(){
+  const canvas=document.getElementById('viz-canvas');
+  if(!canvas)return;
+  const {R,G,B}=getHudRGB();
+  const ctx=canvas.getContext('2d');
+  const W=canvas.width,H=canvas.height;
+  const col=`rgb(${R},${G},${B})`;
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#0e0e12';ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='rgba(0,0,0,.2)';
+  for(let y=0;y<H;y+=4){ctx.fillRect(0,y,W,1)}
+  // grid
+  ctx.strokeStyle='rgba(255,255,255,.03)';ctx.lineWidth=1;
+  for(let x=80;x<W;x+=80){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}
+  for(let y=60;y<H;y+=60){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
+  // crosshair
+  ctx.strokeStyle='rgba(255,255,255,.2)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(W/2-9,H/2);ctx.lineTo(W/2+9,H/2);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(W/2,H/2-9);ctx.lineTo(W/2,H/2+9);ctx.stroke();
+  ctx.strokeStyle=col;ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(W/2-5,H/2);ctx.lineTo(W/2+5,H/2);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(W/2,H/2-5);ctx.lineTo(W/2,H/2+5);ctx.stroke();
+  ctx.textBaseline='middle';
+  // HEALTH
+  const hx2=18,hy=H-46;
+  ctx.fillStyle='rgba(0,0,0,.5)';ctx.beginPath();ctx.roundRect(hx2-4,hy-13,118,26,4);ctx.fill();
+  ctx.fillStyle=col;ctx.font='15px monospace';ctx.fillText('♥',hx2,hy);
+  ctx.font='bold 17px monospace';ctx.fillText('100',hx2+20,hy);
+  // ARMOR
+  const ax=hx2+122;
+  ctx.fillStyle='rgba(0,0,0,.5)';ctx.beginPath();ctx.roundRect(ax-4,hy-13,118,26,4);ctx.fill();
+  ctx.fillStyle=col;ctx.font='15px monospace';ctx.fillText('⚡',ax,hy);
+  ctx.font='bold 17px monospace';ctx.fillText('100',ax+20,hy);
+  // AMMO (bottom right)
+  const amx=W-18,amy=H-46;
+  ctx.fillStyle='rgba(0,0,0,.5)';ctx.beginPath();ctx.roundRect(amx-118,amy-13,122,26,4);ctx.fill();
+  ctx.fillStyle=col;ctx.font='bold 17px monospace';ctx.textAlign='right';ctx.fillText('18',amx-34,amy);
+  ctx.fillStyle=`rgba(${R},${G},${B},.55)`;ctx.font='12px monospace';ctx.fillText('/ 250',amx,amy);
+  ctx.textAlign='left';
+  // WEAPON label
+  ctx.fillStyle='rgba(0,0,0,.4)';ctx.beginPath();ctx.roundRect(amx-88,amy-38,92,20,3);ctx.fill();
+  ctx.fillStyle=`rgba(${R},${G},${B},.7)`;ctx.font='10px monospace';ctx.textAlign='right';
+  ctx.fillText('GLOCK 17',amx,amy-26);ctx.textAlign='left';
+  // FLASHLIGHT (top right)
+  const flx=W-18,fly=18;
+  ctx.fillStyle='rgba(0,0,0,.4)';ctx.beginPath();ctx.roundRect(flx-74,fly-10,78,20,3);ctx.fill();
+  ctx.fillStyle=`rgba(${R},${G},${B},.85)`;ctx.font='10px monospace';ctx.textAlign='right';
+  ctx.fillText('SUIT',flx-24,fly+1);
+  ctx.fillStyle=`rgba(${R},${G},${B},.2)`;ctx.beginPath();ctx.roundRect(flx-22,fly-5,24,10,3);ctx.fill();
+  ctx.fillStyle=col;ctx.beginPath();ctx.roundRect(flx-22,fly-5,16,10,3);ctx.fill();
+  ctx.textAlign='left';
+  // KILL FEED
+  ctx.fillStyle='rgba(0,0,0,.4)';ctx.beginPath();ctx.roundRect(W-194,40,192,16,3);ctx.fill();
+  ctx.fillStyle=`rgba(${R},${G},${B},.6)`;ctx.font='9px monospace';ctx.textAlign='right';
+  ctx.fillText('Soldier killed by GORDON',W-6,48);ctx.textAlign='left';
+  // GEIGER
+  for(let i=0;i<3;i++){
+    ctx.fillStyle=`rgba(${R},${G},${B},${.12+i*.18})`;
+    ctx.fillRect(10,H/2-38+i*14,5,9);
+  }
+  // MAP label
+  ctx.fillStyle='rgba(0,0,0,.35)';ctx.beginPath();ctx.roundRect(6,6,86,14,3);ctx.fill();
+  ctx.fillStyle=`rgba(${R},${G},${B},.45)`;ctx.font='9px monospace';
+  ctx.fillText('c1a0 — Black Mesa',10,14);
+}
+
+function updateVizInfo(){
+  const sw=document.getElementById('viz-swatch');
+  const hexEl=document.getElementById('viz-hex');
+  const chipRgb=document.getElementById('viz-chip-rgb');
+  const chipHex=document.getElementById('viz-chip-hex');
+  const chipBytes=document.getElementById('viz-chip-bytes');
+  if(!sw)return;
+  const {R,G,B}=getHudRGB();
+  const hex=`#${toHx(R)}${toHx(G)}${toHx(B)}`;
+  sw.style.background=hex;
+  const brightness=(R*299+G*587+B*114)/1000;
+  hexEl.style.color=brightness>140?'rgba(0,0,0,.55)':'rgba(255,255,255,.6)';
+  hexEl.textContent=hex;
+  if(chipRgb)chipRgb.textContent=`rgb(${R}, ${G}, ${B})`;
+  if(chipHex)chipHex.textContent=hex;
+  if(chipBytes)chipBytes.textContent=`${toHx(R)} ${toHx(G)} ${toHx(B)}`;
+}
+
+function syncVizSliders(){
+  const {R,G,B}=getHudRGB();
+  ['r','g','b'].forEach(ch=>{
+    const sl=document.getElementById('viz-sl-'+ch);
+    const vl=document.getElementById('viz-vl-'+ch);
+    if(sl){sl.value=ch==='r'?R:ch==='g'?G:B;}
+    if(vl){vl.textContent=ch==='r'?R:ch==='g'?G:B;}
+  });
+}
+
+function updateVizPresetHighlight(){
+  document.querySelectorAll('.viz-preset').forEach((btn,i)=>{
+    btn.classList.toggle('active',i===vizActivePreset);
+  });
+}
+
+function refreshViz(){
+  syncVizSliders();
+  updateVizInfo();
+  drawVizCanvas();
+  updateVizPresetHighlight();
+}
+
+function renderHudViz(){
+  const presetsHtml=VIZ_PRESETS.map((p,i)=>
+    `<div class="viz-preset${i===vizActivePreset?' active':''}" data-vi="${i}" style="cursor:pointer">
+      <div class="viz-preset-sw" style="background:rgb(${p.r},${p.g},${p.b})"></div>
+      <span class="viz-preset-nm">${p.n}</span>
+    </div>`
+  ).join('');
+  const {R,G,B}=getHudRGB();
+  const hex=`#${toHx(R)}${toHx(G)}${toHx(B)}`;
+  const brightness=(R*299+G*587+B*114)/1000;
+  const hexFg=brightness>140?'rgba(0,0,0,.55)':'rgba(255,255,255,.6)';
+  return`<div class="hud-viz">
+    <div class="hud-viz-head" id="viz-toggle-head">
+      <span style="font-size:18px">🖥️</span>
+      <div style="flex:1">
+        <div class="hud-viz-title">Visualizador de cor — HUD</div>
+        <div class="hud-viz-sub">Pré-visualização em tempo real</div>
+      </div>
+      <span class="hud-viz-chevron${vizOpen?' open':''}">▶</span>
+    </div>
+    <div class="hud-viz-body${vizOpen?' open':''}">
+      <div class="hud-viz-inner">
+        <div class="viz-layout">
+          <div>
+            <div class="viz-ch-row">
+              <span class="viz-ch-lbl r">R</span>
+              <input class="viz-range" type="range" min="0" max="255" value="${R}" id="viz-sl-r">
+              <span class="viz-ch-val" id="viz-vl-r">${R}</span>
+            </div>
+            <div class="viz-ch-row">
+              <span class="viz-ch-lbl g">G</span>
+              <input class="viz-range" type="range" min="0" max="255" value="${G}" id="viz-sl-g">
+              <span class="viz-ch-val" id="viz-vl-g">${G}</span>
+            </div>
+            <div class="viz-ch-row">
+              <span class="viz-ch-lbl b">B</span>
+              <input class="viz-range" type="range" min="0" max="255" value="${B}" id="viz-sl-b">
+              <span class="viz-ch-val" id="viz-vl-b">${B}</span>
+            </div>
+            <div class="viz-swatch" id="viz-swatch" style="background:${hex}">
+              <span class="viz-hex" id="viz-hex" style="color:${hexFg}">${hex}</span>
+            </div>
+            <div class="viz-chips">
+              <span class="viz-chip" id="viz-chip-rgb">rgb(${R}, ${G}, ${B})</span>
+              <span class="viz-chip" id="viz-chip-hex">${hex}</span>
+              <span class="viz-chip" id="viz-chip-bytes">${toHx(R)} ${toHx(G)} ${toHx(B)}</span>
+            </div>
+            <div class="viz-presets">${presetsHtml}</div>
+          </div>
+          <div class="viz-canvas-wrap">
+            <canvas id="viz-canvas" width="480" height="270"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function attachVizEvents(){
+  const head=document.getElementById('viz-toggle-head');
+  if(head){
+    head.addEventListener('click',()=>{
+      vizOpen=!vizOpen;
+      document.querySelector('.hud-viz-body').classList.toggle('open',vizOpen);
+      document.querySelector('.hud-viz-chevron').classList.toggle('open',vizOpen);
+      if(vizOpen)drawVizCanvas();
+    });
+  }
+  ['r','g','b'].forEach(ch=>{
+    const sl=document.getElementById('viz-sl-'+ch);
+    if(!sl)return;
+    sl.addEventListener('input',e=>{
+      const val=parseInt(e.target.value);
+      document.getElementById('viz-vl-'+ch).textContent=val;
+      const pid='hud_'+ch;
+      pstate[pid].on=true;
+      pstate[pid].val=val;
+      vizActivePreset=-1;
+      updateVizInfo();
+      drawVizCanvas();
+      updateVizPresetHighlight();
+      // sync patch card if visible
+      const card=document.querySelector(`.patch-card[data-pid="${pid}"]`);
+      if(card){
+        card.classList.add('enabled');
+        card.querySelector('.patch-name').style.color='var(--green)';
+        card.querySelector('.toggle').classList.add('on');
+        const inp=card.querySelector('.field-input');
+        if(inp)inp.value=val;
+        refreshBytes(pid);
+      }
+      renderSidebar();updateUI();
+    });
+  });
+  document.querySelectorAll('.viz-preset').forEach((btn,i)=>{
+    btn.addEventListener('click',()=>{
+      const p=VIZ_PRESETS[i];
+      vizActivePreset=i;
+      ['r','g','b'].forEach(ch=>{
+        const val=ch==='r'?p.r:ch==='g'?p.g:p.b;
+        const pid='hud_'+ch;
+        pstate[pid].on=true;
+        pstate[pid].val=val;
+        const card=document.querySelector(`.patch-card[data-pid="${pid}"]`);
+        if(card){
+          card.classList.add('enabled');
+          card.querySelector('.patch-name').style.color='var(--green)';
+          card.querySelector('.toggle').classList.add('on');
+          const inp=card.querySelector('.field-input');
+          if(inp)inp.value=val;
+          refreshBytes(pid);
+        }
+      });
+      syncVizSliders();
+      updateVizInfo();
+      drawVizCanvas();
+      updateVizPresetHighlight();
+      renderSidebar();updateUI();
+    });
+  });
+  drawVizCanvas();
+}
+
+function renderCatInfo(cat){
+  const info=L()['info_'+cat];
+  if(!info)return'';
+  const open=!!infoOpen[cat];
+  const count=PATCHES.filter(p=>p.cat===cat).length;
+  const body=info.body.replace(/\n/g,'<br>').replace(/<b>/g,'<b>').replace(/<\/b>/g,'</b>').replace(/<code>/g,'<code>').replace(/<\/code>/g,'</code>');
+  return`<div class="cat-info">
+    <div class="cat-info-head" data-info="${cat}">
+      <span class="cih-icon">${t('icon_'+cat)}</span>
+      <div class="cih-left">
+        <div class="cih-title">${t('cat_'+cat)}</div>
+        <div class="cih-sub">${info.title}</div>
+      </div>
+      <span class="cih-badge">${count} ${t('patches_hdr')}</span>
+      <span class="cih-chevron${open?' open':''}">▶</span>
+    </div>
+    <div class="cat-info-body${open?' open':''}">
+      <div class="cib-inner">${body}</div>
+    </div>
+  </div>`;
+}
+
+function renderCard(p){
+  const s=pstate[p.id];
+  const name=p.n[lang]||p.n.pt;
+  const desc=p.d[lang]||p.d.pt;
+  const patched=s.on?patchBytes(p):[...p.orig];
+  const changed=s.on&&patched.some((b,i)=>b!==p.orig[i]);
+  const boxes=patched.map((b,i)=>`<span class="byte-b${changed&&b!==p.orig[i]?' ch':''}">${hx(b)}</span>`).join('');
+  let field='';
+  if(!p.nop&&!p.patch&&p.edit){
+    const e=p.edit[0];
+    const lbl=lang==='en'?(e.le||e.lp):e.lp;
+    field=`<div class="field-row">
+      <span class="field-label">${lbl}</span>
+      <input class="field-input" type="number" min="${e.min}" max="${e.max}" step="${e.step||1}" value="${s.val}" data-pid="${p.id}">
+    </div>`;
+  }
+  const patchNote=p.patch?`<div class="nop-info">→ <code>${p.patch.map(b=>b.toString(16).toUpperCase().padStart(2,'0')).join(' ')}</code></div>`:'';
+  const nopNote=p.nop?`<div class="nop-info">→ <code>00 00 00 00</code> (NOP MIPS)</div>`:'';
+  return`<div class="patch-card${s.on?' enabled':''}" data-pid="${p.id}">
+    <div class="patch-head" data-pid="${p.id}">
+      <span class="patch-name">${name}</span>
+      <span class="patch-off">0x${p.offset.toString(16).toUpperCase().padStart(8,'0')}</span>
+      <button class="toggle${s.on?' on':''}" data-pid="${p.id}" aria-label="toggle"></button>
+    </div>
+    <div class="patch-body${s.open?' open':''}">
+      <div class="patch-desc">${desc}</div>
+      ${field}${nopNote}${patchNote}
+      <div class="bytes-row"><span class="bytes-lbl">${t('bytes')}</span>${boxes}</div>
+    </div>
+  </div>`;
+}
+
+function renderAll(){
+  const cats=currentCat==='all'?[...new Set(PATCHES.map(p=>p.cat))]:[currentCat];
+  let html='';
+  cats.forEach(cat=>{
+    const ps=PATCHES.filter(p=>p.cat===cat);
+    if(cat==='hud')html+=renderHudViz();
+    html+=renderCatInfo(cat);
+    html+=`<div class="patch-grid">${ps.map(renderCard).join('')}</div>`;
+  });
+  document.getElementById('patch-content').innerHTML=html;
+  attachEvents();
+  attachVizEvents();
+  renderSidebar();
+  updateUI();
+}
+
+function attachEvents(){
+  const c=document.getElementById('patch-content');
+  c.querySelectorAll('.cat-info-head').forEach(h=>{
+    h.addEventListener('click',()=>{
+      const cat=h.dataset.info;
+      infoOpen[cat]=!infoOpen[cat];
+      h.nextElementSibling.classList.toggle('open',infoOpen[cat]);
+      h.querySelector('.cih-chevron').classList.toggle('open',infoOpen[cat]);
+    });
+  });
+  c.querySelectorAll('.patch-head').forEach(h=>{
+    h.addEventListener('click',e=>{
+      const tog=e.target.closest('.toggle');
+      if(tog){e.stopPropagation();toggleOn(tog.dataset.pid);return}
+      const pid=h.dataset.pid;
+      pstate[pid].open=!pstate[pid].open;
+      h.nextElementSibling.classList.toggle('open',pstate[pid].open);
+    });
+  });
+  c.querySelectorAll('.field-input').forEach(inp=>{
+    inp.addEventListener('input',()=>{
+      pstate[inp.dataset.pid].val=inp.value;
+      refreshBytes(inp.dataset.pid);
+      if(['hud_r','hud_g','hud_b'].includes(inp.dataset.pid))refreshViz();
+    });
+  });
+}
+
+function toggleOn(pid){
+  pstate[pid].on=!pstate[pid].on;
+  const card=document.querySelector(`.patch-card[data-pid="${pid}"]`);
+  if(!card)return;
+  card.classList.toggle('enabled',pstate[pid].on);
+  card.querySelector('.patch-name').style.color=pstate[pid].on?'var(--green)':'';
+  card.querySelector('.toggle').classList.toggle('on',pstate[pid].on);
+  refreshBytes(pid);
+  if(['hud_r','hud_g','hud_b'].includes(pid))refreshViz();
+  renderSidebar();
+  updateUI();
+}
+
+function refreshBytes(pid){
+  const p=PATCHES.find(x=>x.id===pid);
+  const card=document.querySelector(`.patch-card[data-pid="${pid}"]`);
+  if(!card)return;
+  const s=pstate[pid];
+  const patched=s.on?patchBytes(p):[...p.orig];
+  const changed=s.on&&patched.some((b,i)=>b!==p.orig[i]);
+  const row=card.querySelector('.bytes-row');
+  if(!row)return;
+  row.innerHTML=`<span class="bytes-lbl">${t('bytes')}</span>`+
+    patched.map((b,i)=>`<span class="byte-b${changed&&b!==p.orig[i]?' ch':''}">${hx(b)}</span>`).join('');
+}
+
+function updateUI(){
+  const active=PATCHES.filter(p=>pstate[p.id].on).length;
+  document.getElementById('s-active').textContent=active;
+  document.getElementById('s-total').textContent=PATCHES.length;
+  document.getElementById('s-active-lbl').textContent=t('active');
+  document.getElementById('s-avail-lbl').textContent=t('available');
+  const canSave=fileBytes&&active>0;
+  document.getElementById('btn-apply').disabled=!canSave;
+  document.getElementById('btn-saveas').disabled=!canSave;
+  document.getElementById('btn-apply-lbl').textContent=t('apply');
+  document.getElementById('btn-saveas-lbl').textContent=t('saveas');
+  document.getElementById('btn-reset-lbl').textContent=t('reset');
+}
+
+// ════════════════════════════════════════════════════════
+// FILE
+// ════════════════════════════════════════════════════════
+function showStatus(msg,type){
+  const bar=document.getElementById('status-bar');
+  bar.style.display='flex';bar.className='status-bar'+(type?' '+type:'');
+  document.getElementById('status-text').textContent=msg;
+}
+
+function loadFile(file){
+  if(!file)return;
+  fileName=file.name;
+  const r=new FileReader();r.onload=e=>{
+    fileBytes=new Uint8Array(e.target.result);
+    const mb=(fileBytes.length/1048576).toFixed(2);
+    document.getElementById('hdr-file').textContent=`${file.name}  ·  ${mb} MB`;
+    document.getElementById('drop-zone').style.display='none';
+    document.getElementById('patch-ui').style.display='block';
+    document.getElementById('actions-bar').style.display='flex';
+    document.getElementById('s-file').textContent=`${file.name} — ${mb} MB`;
+    showStatus(t('loaded').replace('{n}',PATCHES.length),'ok');
+    renderAll();
+  };r.readAsArrayBuffer(file);
+}
+
+const dz=document.getElementById('drop-zone');
+dz.addEventListener('click',()=>document.getElementById('file-input').click());
+document.getElementById('file-input').addEventListener('change',e=>loadFile(e.target.files[0]));
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag')});
+dz.addEventListener('dragleave',()=>dz.classList.remove('drag'));
+dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag');loadFile(e.dataTransfer.files[0])});
+
+// ════════════════════════════════════════════════════════
+// BUILD & SAVE
+// ════════════════════════════════════════════════════════
+function buildOut(){
+  const out=new Uint8Array(fileBytes);let n=0;
+  PATCHES.forEach(p=>{if(!pstate[p.id].on)return;patchBytes(p).forEach((b,i)=>{out[p.offset+i]=b});n++});
+  return{out,n};
+}
+function dlBlob(bytes,name){
+  const url=URL.createObjectURL(new Blob([bytes],{type:'application/octet-stream'}));
+  const a=document.createElement('a');a.href=url;a.download=name;a.click();URL.revokeObjectURL(url);
+}
+
+document.getElementById('btn-apply').addEventListener('click',()=>{
+  if(!fileBytes)return;const{out,n}=buildOut();
+  dlBlob(out,fileName);showStatus(t('applied').replace('{n}',n),'ok');
+});
+
+document.getElementById('btn-saveas').addEventListener('click',async()=>{
+  if(!fileBytes)return;const{out,n}=buildOut();
+  if(window.showSaveFilePicker){
+    try{
+      const fh=await showSaveFilePicker({suggestedName:fileName,types:[{description:'PS2 ELF',accept:{'application/octet-stream':['.elf','.ELF']}}]});
+      const ws=await fh.createWritable();await ws.write(out);await ws.close();
+      showStatus(t('applied').replace('{n}',n),'ok');
+    }catch(err){if(err.name!=='AbortError'){dlBlob(out,fileName);showStatus(t('applied').replace('{n}',n),'ok')}}
+  }else{dlBlob(out,fileName);showStatus(t('applied').replace('{n}',n),'ok')}
+});
+
+document.getElementById('btn-reset').addEventListener('click',()=>{
+  PATCHES.forEach(p=>{pstate[p.id]={on:false,val:p.edit?p.edit[0].def:null,open:false}});
+  renderAll();showStatus(t('reset_msg'),'');
+});
+
+// ════════════════════════════════════════════════════════
+// LANGUAGE
+// ════════════════════════════════════════════════════════
+function applyLang(l){
+  lang=l;const L2=I18N[l];
+  document.getElementById('hdr-flag').textContent=L2.lang_flag;
+  document.getElementById('hdr-lang-label').textContent=L2.lang_label;
+  document.getElementById('dz-main').innerHTML=L2.dz_main;
+  document.getElementById('dz-sub').textContent=L2.dz_sub;
+  document.getElementById('lm-title').textContent=L2.lm_title;
+  document.getElementById('lm-sub').textContent=L2.lm_sub;
+  if(fileBytes)renderAll();else{renderSidebar();updateUI()}
+}
+
+// Language modal
+document.getElementById('lang-overlay').querySelectorAll('.lang-option').forEach(opt=>{
+  opt.addEventListener('click',()=>{
+    const l=opt.dataset.lang;
+    document.getElementById('lang-overlay').style.display='none';
+    applyLang(l);
+  });
+});
+
+// Re-open modal from header button
+document.getElementById('hdr-lang-btn').addEventListener('click',()=>{
+  document.getElementById('lang-overlay').style.display='flex';
+});
+
+// ════════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════════
+renderSidebar();
+updateUI();
+
+</script>
+</body>
+</html>
